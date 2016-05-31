@@ -1,0 +1,23 @@
+server:
+  requestLog:
+    timeZone: Asia/Shanghai
+    appenders:
+      - type: file
+        currentLogFilename: ./logs/access.log
+        archivedLogFilenamePattern: ./logs/access-%d.log.gz
+        archivedFileCount: 5
+  applicationConnectors:
+      - type: http
+        port: 8080
+  adminConnectors:
+      - type: http
+        port: 8081
+
+logging:
+  level: INFO
+  appenders:
+    - type: file
+      currentLogFilename: ./logs/beaver.log
+      archivedLogFilenamePattern: ./logs/beaver-%d.log.gz
+      archivedFileCount: 5
+      timeZone: Asia/Shanghai
