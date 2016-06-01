@@ -21,3 +21,13 @@ logging:
       archivedLogFilenamePattern: ./logs/beaver-%d.log.gz
       archivedFileCount: 5
       timeZone: Asia/Shanghai
+
+mysql:
+  connectionPool:
+    url: jdbc:mysql://db.beaver.rds.sogou/beaver?user=clouddev&password=clouddev123456&useUnicode=true&characterEncoding=utf8&autoReconnect=true
+    initConnectionNum: 3
+    minConnectionNum: 3
+    maxConnectionNum: 50
+    idleTimeout: 30000
+    idleQueueSize: 50
+    idleConnectionCloseThreadPoolSize: 10

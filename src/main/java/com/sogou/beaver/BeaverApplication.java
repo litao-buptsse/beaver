@@ -1,5 +1,6 @@
 package com.sogou.beaver;
 
+import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.resources.JobResources;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
@@ -11,7 +12,11 @@ import io.dropwizard.setup.Environment;
 public class BeaverApplication extends Application<BeaverConfiguration> {
   @Override
   public void run(BeaverConfiguration configuration, Environment environment) throws Exception {
-    environment.jersey().register(new JobResources());
+    JDBCConnectionPool mysqlConnectionPool = configuration.constructMysqlConnectionPool(
+        configuration.getMysqlConfiguration());
+    mysqlConnectionPool.start();
+
+    environment.jersey().register(new JobResources(mysqlConnectionPool));
   }
 
   @Override

@@ -4,14 +4,14 @@
 
 | ID | Type | Description | Resources | Http Method | URL Params | Request Data(json) | Reponse Data(json) | Comment |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 | Task | 创建任务 | /tasks | POST | | $task | | |
-| 2 | Task | 获取任务列表 | /tasks | GET | userId=$userId | | $taskList | |
+| 1 | Job | 创建任务 | /jobs | POST | | $job | | |
+| 2 | Job | 获取任务列表 | /jobs | GET | userId=$userId | | $jobList | |
 | 3 | TableInfo | 获取数据仓库元信息 | /tableInfos | GET | tableName=$tableName | | $tableInfo | |
 | 4 | MethodInfo | 获取函数元信息 | /methodInfos | GET | | | $methodInfo | |
 
 ## Resources Format
 
-### Task Resource Format
+### Job Resource Format
 
 ```json
 {
