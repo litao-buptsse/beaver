@@ -5,11 +5,10 @@ import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.model.Job;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Created by Tao Li on 6/1/16.
@@ -26,5 +25,13 @@ public class JobResources {
   @Consumes(MediaType.APPLICATION_JSON)
   public void submitTask(Job job) throws ConnectionPoolException, SQLException {
     dao.createJob(job);
+  }
+
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<Job> getJobs(@QueryParam("userId") String userId,
+                           @QueryParam("page") long page, @QueryParam("size") long size)
+      throws ConnectionPoolException, SQLException {
+    return dao.getJobsByUserId(userId, page, size);
   }
 }

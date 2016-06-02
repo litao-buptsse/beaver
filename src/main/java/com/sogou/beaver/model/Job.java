@@ -20,6 +20,19 @@ public class Job {
     // Jackson deserialization
   }
 
+  public Job(long id, String userId, String state, String startTime, String endTime,
+             String queryTerm, String executionPlan, String host, String reportURL) {
+    this.id = id;
+    this.userId = userId;
+    this.state = state;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.queryTerm = queryTerm;
+    this.executionPlan = executionPlan;
+    this.host = host;
+    this.reportURL = reportURL;
+  }
+
   @JsonProperty
   public long getId() {
     return id;

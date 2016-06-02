@@ -1,6 +1,5 @@
 package com.sogou.beaver.util;
 
-import com.sogou.beaver.db.ConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
