@@ -1,5 +1,7 @@
 package com.sogou.beaver;
 
+import com.sogou.beaver.core.execution.JobExecuteController;
+import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.resources.JobResources;
 import io.dropwizard.Application;
@@ -16,7 +18,19 @@ public class BeaverApplication extends Application<BeaverConfiguration> {
         configuration.getMysqlConfiguration());
     mysqlConnectionPool.start();
 
-    environment.jersey().register(new JobResources(mysqlConnectionPool));
+    JobDao jobDao = new JobDao(mysqlConnectionPool);
+
+    JobExecuteController jobExecuteController = new JobExecuteController(jobDao);
+    new Thread(jobExecuteController, "JobExecuteController").start();
+
+    environment.jersey().register(new JobResources(jobDao));
+
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        jobExecuteController.shutdown();
+      }
+    });
   }
 
   @Override

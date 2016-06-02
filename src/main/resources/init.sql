@@ -1,0 +1,14 @@
+CREATE TABLE `jobs` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`userId` VARCHAR(50) NULL DEFAULT NULL,
+	`state` VARCHAR(20) NULL DEFAULT 'WAIT',
+	`startTime` VARCHAR(19) NULL DEFAULT NULL,
+	`endTime` VARCHAR(19) NULL DEFAULT NULL,
+	`queryTerm` TEXT NULL,
+	`executionPlan` TEXT NULL,
+	`host` VARBINARY(50) NULL DEFAULT NULL,
+	`reportURL` VARBINARY(200) NULL DEFAULT NULL,
+	PRIMARY KEY (`id`),
+	INDEX `userId` (`userId`),
+	INDEX `state` (`state`)
+)

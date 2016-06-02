@@ -14,7 +14,7 @@ server:
         port: 8081
 
 logging:
-  level: INFO
+  level: DEBUG
   appenders:
     - type: file
       currentLogFilename: ./logs/beaver.log

@@ -55,4 +55,8 @@ public class CommonUtils {
       return localip;
     }
   }
+
+  public static String quoteString(String str) {
+    return str == null ? null : String.format("'%s'", str);
+  }
 }
