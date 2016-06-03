@@ -11,7 +11,7 @@ public class Job {
   private String state;
   private String startTime;
   private String endTime;
-  private String queryTerm;
+  private String queryPlan;
   private String executionPlan;
   private String host;
   private String reportURL;
@@ -21,13 +21,13 @@ public class Job {
   }
 
   public Job(long id, String userId, String state, String startTime, String endTime,
-             String queryTerm, String executionPlan, String host, String reportURL) {
+             String queryPlan, String executionPlan, String host, String reportURL) {
     this.id = id;
     this.userId = userId;
     this.state = state;
     this.startTime = startTime;
     this.endTime = endTime;
-    this.queryTerm = queryTerm;
+    this.queryPlan = queryPlan;
     this.executionPlan = executionPlan;
     this.host = host;
     this.reportURL = reportURL;
@@ -79,12 +79,12 @@ public class Job {
   }
 
   @JsonProperty
-  public String getQueryTerm() {
-    return queryTerm;
+  public String getQueryPlan() {
+    return queryPlan;
   }
 
-  public void setQueryTerm(String queryTerm) {
-    this.queryTerm = queryTerm;
+  public void setQueryPlan(String queryPlan) {
+    this.queryPlan = queryPlan;
   }
 
   @JsonProperty

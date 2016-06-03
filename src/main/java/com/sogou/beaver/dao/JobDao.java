@@ -43,38 +43,44 @@ public class JobDao {
 
   public void createJob(Job job) throws ConnectionPoolException, SQLException {
     execute(String.format(
-        "INSERT INTO %s (userId, state, startTime, queryTerm, executionPlan) " +
-            "VALUES('%s', 'WAIT', '%s', '%s', '%s')", TABLE_NAME,
-        job.getUserId(), CommonUtils.now(), job.getQueryTerm(), job.getExecutionPlan()));
+        "INSERT INTO %s (userId, state, startTime, queryPlan, executionPlan) " +
+            "VALUES(%s, 'WAIT', %s, %s, %s)", TABLE_NAME,
+        CommonUtils.formatSQLValue(job.getUserId()),
+        CommonUtils.formatSQLValue(CommonUtils.now()),
+        CommonUtils.formatSQLValue(job.getQueryPlan()),
+        CommonUtils.formatSQLValue(job.getExecutionPlan())));
   }
 
   private void updateJob(Job job, String whereClause) throws ConnectionPoolException, SQLException {
     execute(String.format(
-        "UPDATE %s SET userId='%s', state='%s', startTime='%s', endTime=%s, " +
-            "queryTerm='%s', executionPlan='%s', host=%s, reportURL=%s %s", TABLE_NAME,
-        job.getUserId(), job.getState(), job.getStartTime(),
-        CommonUtils.quoteString(job.getEndTime()),
-        job.getQueryTerm(),
-        job.getExecutionPlan(),
-        CommonUtils.quoteString(job.getHost()),
-        CommonUtils.quoteString(job.getReportURL()),
+        "UPDATE %s SET userId=%s, state=%s, startTime=%s, endTime=%s, " +
+            "queryPlan=%s, executionPlan=%s, host=%s, reportURL=%s %s", TABLE_NAME,
+        CommonUtils.formatSQLValue(job.getUserId()),
+        CommonUtils.formatSQLValue(job.getState()),
+        CommonUtils.formatSQLValue(job.getStartTime()),
+        CommonUtils.formatSQLValue(job.getEndTime()),
+        CommonUtils.formatSQLValue(job.getQueryPlan()),
+        CommonUtils.formatSQLValue(job.getExecutionPlan()),
+        CommonUtils.formatSQLValue(job.getHost()),
+        CommonUtils.formatSQLValue(job.getReportURL()),
         whereClause));
   }
 
   public void updateJobById(Job job, long id) throws ConnectionPoolException, SQLException {
-    updateJob(job, String.format("WHERE id='%s'", id));
+    updateJob(job, String.format("WHERE id=%s", id));
   }
 
   public void updateJobByIdAndStateAndHost(Job job, long id, String state, String host)
       throws ConnectionPoolException, SQLException {
-    updateJob(job, String.format("WHERE id='%s' AND state='%s' AND host='%s'", id, state, host));
+    updateJob(job, String.format("WHERE id=%s AND state='%s' AND host='%s'", id, state, host));
   }
 
   public void updateJobsStateAndHostByIds(String state, String host, long[] ids)
       throws ConnectionPoolException, SQLException {
     execute(String.format(
-        "UPDATE %s SET state='%s', host=%s WHERE id in (%s)",
-        TABLE_NAME, state, CommonUtils.quoteString(host),
+        "UPDATE %s SET state=%s, host=%s WHERE id in (%s)", TABLE_NAME,
+        CommonUtils.formatSQLValue(state),
+        CommonUtils.formatSQLValue(host),
         LongStream.of(ids).mapToObj(id -> String.valueOf(id)).collect(Collectors.joining(", "))));
   }
 
@@ -92,7 +98,7 @@ public class JobDao {
                 rs.getString("state"),
                 rs.getString("startTime"),
                 rs.getString("endTime"),
-                rs.getString("queryTerm"),
+                rs.getString("queryPlan"),
                 rs.getString("executionPlan"),
                 rs.getString("host"),
                 rs.getString("reportURL")
@@ -123,7 +129,7 @@ public class JobDao {
 
   public Job getJobById(long id)
       throws ConnectionPoolException, SQLException {
-    return getJob(String.format("WHERE id='%s' ORDER BY ID ASC", id));
+    return getJob(String.format("WHERE id=%s ORDER BY ID ASC", id));
   }
 
   public List<Job> getJobsByUserId(String userId, long page, long size)

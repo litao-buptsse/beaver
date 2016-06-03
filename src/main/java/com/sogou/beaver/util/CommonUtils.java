@@ -21,7 +21,7 @@ public class CommonUtils {
     return LocalDateTime.now().format(DateTimeFormatter.ofPattern(TIME_FORMAT));
   }
 
-  public static String getRealIp() {
+  public static String ip() {
     String localip = null;// 本地IP，如果没有配置外网IP则返回它
     String netip = null;// 外网IP
     try {
@@ -56,7 +56,7 @@ public class CommonUtils {
     }
   }
 
-  public static String quoteString(String str) {
-    return str == null ? null : String.format("'%s'", str);
+  public static String formatSQLValue(String str) {
+    return str == null ? null : String.format("'%s'", str.replace("'", "''"));
   }
 }

@@ -1,11 +1,11 @@
 package com.sogou.beaver.resources;
 
+import com.sogou.beaver.core.plan.ParseException;
 import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.ConnectionPoolException;
-import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.core.plan.ExecutionPlan;
-import com.sogou.beaver.core.plan.QueryTerm;
-import com.sogou.beaver.core.plan.QueryTermParser;
+import com.sogou.beaver.core.plan.QueryPlan;
+import com.sogou.beaver.core.plan.QueryPlanParser;
 import com.sogou.beaver.model.Job;
 
 import javax.ws.rs.*;
@@ -27,9 +27,10 @@ public class JobResources {
 
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public void submitTask(Job job) throws ConnectionPoolException, SQLException, IOException {
-    QueryTerm queryTerm = QueryTerm.fromJson(job.getQueryTerm());
-    ExecutionPlan executionPlan = QueryTermParser.parse(queryTerm);
+  public void submitJob(Job job)
+      throws ConnectionPoolException, SQLException, IOException, ParseException {
+    QueryPlan queryTerm = QueryPlan.fromJson(job.getQueryPlan());
+    ExecutionPlan executionPlan = QueryPlanParser.parse(queryTerm);
     job.setExecutionPlan(executionPlan.toJson());
     dao.createJob(job);
   }

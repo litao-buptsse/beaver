@@ -5,6 +5,7 @@ import com.sogou.beaver.core.engine.SQLEngine;
 import com.sogou.beaver.core.plan.ExecutionPlan;
 import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.ConnectionPoolException;
+import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.model.Job;
 import com.sogou.beaver.util.CommonUtils;
 import org.slf4j.Logger;
@@ -23,8 +24,9 @@ public class JobExecuteController implements Runnable {
   private final Logger LOG = LoggerFactory.getLogger(JobExecuteController.class);
 
   private final JobDao dao;
+  private final JDBCConnectionPool prestoConnectionPool;
   private volatile boolean isRunning = false;
-  private final static String IP = CommonUtils.getRealIp();
+  private final static String IP = CommonUtils.ip();
   private final static long CHECK_INTERVAL = 3;
   private final static int CHECK_JOB_BATCH = 20;
   private final static long PREEMPT_INTERVAL = 1;
@@ -33,8 +35,9 @@ public class JobExecuteController implements Runnable {
   private BlockingQueue<Job> jobQueue = new ArrayBlockingQueue<>(JOB_QUEUE_SIZE, true);
   private ExecutorService workerPool = Executors.newFixedThreadPool(WORKER_SIZE);
 
-  public JobExecuteController(JobDao dao) {
+  public JobExecuteController(JobDao dao, JDBCConnectionPool prestoConnectionPool) {
     this.dao = dao;
+    this.prestoConnectionPool = prestoConnectionPool;
   }
 
   private class Worker implements Runnable {
@@ -48,7 +51,7 @@ public class JobExecuteController implements Runnable {
             ExecutionPlan plan = ExecutionPlan.fromJson(job.getExecutionPlan());
             switch (plan.getEngine()) {
               case "presto":
-                SQLEngine engine = new PrestoEngine();
+                SQLEngine engine = new PrestoEngine(prestoConnectionPool);
                 if (engine.execute(plan.getSql())) {
                   state = "SUCC";
                 }

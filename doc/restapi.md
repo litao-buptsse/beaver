@@ -13,23 +13,38 @@
 
 ### Job Resource Format
 
-```json
+```
 {
   id: $id,
   userId: $userId,  // needed
   state: $state,
   startTime: $startTime,
   endTime: $endTime,
-  queryTerm: $queryTerm,  // needed
+  queryPlan: $queryPlan,  // needed
   executionPlan: $executionPlan,
   host: $host,
   reportURL: $reportURL
 }
 ```
 
-#### QueryTerm Field Format (JSON)
+#### QueryPlan Field Format (JSON)
 
-```json
+```
+{
+  type: $type // raw, compound
+  query: $query
+}
+```
+
+##### Raw Query Field
+
+```
+sql
+```
+
+##### Compound Query Filed (JSON)
+
+```
 {
   tableName: $tableName,
   metrics: [
@@ -61,7 +76,7 @@
 
 ### TableInfo Resource Format
 
-```json
+```
 {
   id: $id,
   tableName: $tableName,
@@ -82,7 +97,7 @@
 
 ### MethodInfo Resource Format
 
-```json
+```
 {
   metrics: [
     method: $method,
