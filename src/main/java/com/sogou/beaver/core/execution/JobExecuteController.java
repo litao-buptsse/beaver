@@ -51,7 +51,7 @@ public class JobExecuteController implements Runnable {
             ExecutionPlan plan = ExecutionPlan.fromJson(job.getExecutionPlan());
             switch (plan.getEngine()) {
               case "presto":
-                SQLEngine engine = new PrestoEngine(prestoConnectionPool);
+                SQLEngine engine = new PrestoEngine(prestoConnectionPool, job.getId());
                 if (engine.execute(plan.getSql())) {
                   state = "SUCC";
                 }

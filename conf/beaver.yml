@@ -43,3 +43,6 @@ presto:
     idleTimeout: 30000
     idleQueueSize: 10
     idleConnectionCloseThreadPoolSize: 10
+
+outputCollector:
+  outputRootDir: data

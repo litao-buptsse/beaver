@@ -28,7 +28,7 @@ public class BeaverConfiguration extends Configuration {
     for (Map.Entry<String, Map<String, String>> entry : configuration.entrySet()) {
       builder.put(entry.getKey(), ImmutableMap.copyOf(entry.getValue()));
     }
-    this.mysqlConfiguration = builder.build();
+    mysqlConfiguration = builder.build();
   }
 
   private Map<String, Map<String, String>> prestoConfiguration = Collections.emptyMap();
@@ -44,7 +44,7 @@ public class BeaverConfiguration extends Configuration {
     for (Map.Entry<String, Map<String, String>> entry : configuration.entrySet()) {
       builder.put(entry.getKey(), ImmutableMap.copyOf(entry.getValue()));
     }
-    this.prestoConfiguration = builder.build();
+    prestoConfiguration = builder.build();
   }
 
   public JDBCConnectionPool constructJDBCConnectionPool(
@@ -87,5 +87,25 @@ public class BeaverConfiguration extends Configuration {
       pool.setIdleConnectionCloseThreadPoolSize(
           Integer.parseInt(configuration.get("idleConnectionCloseThreadPoolSize")));
     }
+  }
+
+  private Map<String, String> outputCollectorConfiguration = Collections.emptyMap();
+
+  @JsonProperty("outputCollector")
+  public Map<String, String> getOutputCollectorConfiguration() {
+    return outputCollectorConfiguration;
+  }
+
+  @JsonProperty("outputCollector")
+  public void setOutputCollectorConfiguration(Map<String, String> configuration) {
+    final ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    for (Map.Entry<String, String> entry : configuration.entrySet()) {
+      builder.put(entry.getKey(), entry.getValue());
+    }
+    outputCollectorConfiguration = builder.build();
+  }
+
+  public String getOutputCollectorRootDir() {
+    return outputCollectorConfiguration.get("outputRootDir");
   }
 }
