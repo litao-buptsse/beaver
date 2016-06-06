@@ -1,6 +1,9 @@
 package com.sogou.beaver.core.plan;
 
+import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.util.CommonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -9,6 +12,8 @@ import java.util.stream.Collectors;
  * Created by Tao Li on 2016/6/1.
  */
 public class QueryPlanParser {
+  private final static Logger LOG = LoggerFactory.getLogger(QueryPlanParser.class);
+
   public static ExecutionPlan parse(QueryPlan queryPlan) throws ParseException {
     String engine = parseEngine(queryPlan);
     String sql = parseSQL(queryPlan);
@@ -65,7 +70,7 @@ public class QueryPlanParser {
 
     String sql = String.format("SELECT %s, %s FROM %s WHERE %s AND %s GROUP BY %s",
         bucketMetricSQL, metricSQL, tableName, timeRangeSQL, filterSQL, bucketSQL);
-    System.out.println(sql);
+    LOG.debug("parsed sql: " + sql);
     return sql;
   }
 
