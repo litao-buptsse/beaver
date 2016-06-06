@@ -1,7 +1,7 @@
-package com.sogou.beaver.core.engine;
+package com.sogou.beaver.core.collector;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Tao Li on 2016/6/3.
  */
-public class FileOutputCollector implements Closeable {
+public class FileOutputCollector implements OutputCollector {
   private final static String FILE_SEPARATOR = File.separator;
   private final static String FIELD_SEPARATOR = "\001";
   private final static String RECORD_SEPARATOR = "\n";
@@ -34,6 +34,7 @@ public class FileOutputCollector implements Closeable {
     writer = Files.newBufferedWriter(file, CHARSET, StandardOpenOption.WRITE);
   }
 
+  @Override
   public void collect(List<String> values) throws IOException {
     String line = values.stream().collect(Collectors.joining(FIELD_SEPARATOR)) + RECORD_SEPARATOR;
     writer.write(line);

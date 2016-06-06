@@ -1,6 +1,6 @@
 package com.sogou.beaver;
 
-import com.sogou.beaver.core.engine.FileOutputCollector;
+import com.sogou.beaver.core.collector.FileOutputCollector;
 import com.sogou.beaver.core.execution.JobExecuteController;
 import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.JDBCConnectionPool;
@@ -9,7 +9,6 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
-import java.io.File;
 import java.util.Properties;
 
 /**
@@ -19,6 +18,7 @@ public class BeaverApplication extends Application<BeaverConfiguration> {
   @Override
   public void run(BeaverConfiguration configuration, Environment environment) throws Exception {
     // init FileOutputCollector output root dir
+    // TODO Support config output root directory per FileOutputCollector instance
     FileOutputCollector.initOutputRootDir(configuration.getOutputCollectorRootDir());
 
     // start mysql connection pool
@@ -29,7 +29,7 @@ public class BeaverApplication extends Application<BeaverConfiguration> {
 
     // start presto connection pool
     Properties info = new Properties();
-    info.setProperty("user", "presto");
+    info.setProperty("user", "beaver");
     JDBCConnectionPool prestoConnectionPool = configuration.constructJDBCConnectionPool(
         configuration.getPrestoConfiguration(), info);
     prestoConnectionPool.start();
@@ -47,6 +47,8 @@ public class BeaverApplication extends Application<BeaverConfiguration> {
       @Override
       public void run() {
         jobExecuteController.shutdown();
+        prestoConnectionPool.close();
+        mysqlConnectionPool.close();
       }
     });
   }

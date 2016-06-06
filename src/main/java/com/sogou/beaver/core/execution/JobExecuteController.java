@@ -52,8 +52,12 @@ public class JobExecuteController implements Runnable {
             switch (plan.getEngine()) {
               case "presto":
                 SQLEngine engine = new PrestoEngine(prestoConnectionPool, job.getId());
-                if (engine.execute(plan.getSql())) {
-                  state = "SUCC";
+                try {
+                  if (engine.execute(plan.getSql())) {
+                    state = "SUCC";
+                  }
+                } catch (SQLException e) {
+                  LOG.error("Failed to execute sql: " + plan.getSql(), e);
                 }
               default:
                 LOG.error("Not supported engine: " + plan.getEngine());
