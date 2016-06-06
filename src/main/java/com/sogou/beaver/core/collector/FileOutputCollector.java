@@ -1,6 +1,7 @@
 package com.sogou.beaver.core.collector;
 
-import java.io.BufferedOutputStream;
+import com.sogou.beaver.core.meta.ColumnMeta;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Tao Li on 2016/6/3.
  */
-public class FileOutputCollector implements OutputCollector {
+public class FileOutputCollector implements RelationOutputCollector {
   private final static String FILE_SEPARATOR = File.separator;
   private final static String FIELD_SEPARATOR = "\001";
   private final static String RECORD_SEPARATOR = "\n";
@@ -35,8 +36,15 @@ public class FileOutputCollector implements OutputCollector {
   }
 
   @Override
+  public void initColumnMetas(List<ColumnMeta> columnMetadatas) throws IOException {
+    String header = columnMetadatas.stream()
+        .map(meta -> meta.getColumnName()).collect(Collectors.joining(FIELD_SEPARATOR));
+    writer.write(header);
+  }
+
+  @Override
   public void collect(List<String> values) throws IOException {
-    String line = values.stream().collect(Collectors.joining(FIELD_SEPARATOR)) + RECORD_SEPARATOR;
+    String line = RECORD_SEPARATOR + values.stream().collect(Collectors.joining(FIELD_SEPARATOR));
     writer.write(line);
   }
 

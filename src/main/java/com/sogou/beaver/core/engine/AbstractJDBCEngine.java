@@ -1,6 +1,7 @@
 package com.sogou.beaver.core.engine;
 
-import com.sogou.beaver.core.collector.OutputCollector;
+import com.sogou.beaver.core.collector.RelationOutputCollector;
+import com.sogou.beaver.core.meta.ColumnMeta;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.db.JDBCConnectionPool;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ public abstract class AbstractJDBCEngine extends AbstractSQLEngine {
   private final Logger LOG = LoggerFactory.getLogger(AbstractJDBCEngine.class);
 
   @Override
-  public boolean doExecute(String sql, OutputCollector collector) throws SQLException {
+  public boolean doExecute(String sql, RelationOutputCollector collector) throws SQLException {
     JDBCConnectionPool pool = getJDBCConnectionPool();
     Connection conn = null;
     try {
@@ -37,26 +38,27 @@ public abstract class AbstractJDBCEngine extends AbstractSQLEngine {
     }
   }
 
-  public abstract boolean doExecute(String sql, Connection conn, OutputCollector collector)
+  public abstract boolean doExecute(String sql, Connection conn, RelationOutputCollector collector)
       throws SQLException;
 
   public abstract JDBCConnectionPool getJDBCConnectionPool();
 
-  protected List<String> getColumnNames(ResultSetMetaData rsmd, int columnNum) throws SQLException {
-    List<String> columnNames = new ArrayList<>();
-    for (int i = 1; i <= columnNum; i++) {
-      columnNames.add(rsmd.getColumnName(i));
+  protected List<ColumnMeta> getColumnMetas(ResultSetMetaData rsmd) throws SQLException {
+    List<ColumnMeta> columnMetas = new ArrayList<>();
+    for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+      columnMetas.add(new ColumnMeta(
+          rsmd.getColumnName(i), rsmd.getColumnType(i), rsmd.getColumnTypeName(i)));
     }
-    return columnNames;
+    return columnMetas;
   }
 
-  protected List<String> getColumnValues(ResultSetMetaData rsmd, ResultSet rs, int columnNum)
+  protected List<String> getColumnValues(List<ColumnMeta> columnMetas, ResultSet rs)
       throws SQLException {
     List<String> values = new ArrayList<>();
-    for (int i = 1; i <= columnNum; i++) {
+    for (ColumnMeta meta : columnMetas) {
       String value;
-      String columnName = rsmd.getColumnName(i);
-      switch (rsmd.getColumnType(i)) {
+      String columnName = meta.getColumnName();
+      switch (meta.getColumnType()) {
         case java.sql.Types.ARRAY:
           value = String.valueOf(rs.getArray(columnName));
           break;
@@ -96,7 +98,7 @@ public abstract class AbstractJDBCEngine extends AbstractSQLEngine {
           value = String.valueOf(rs.getObject(columnName));
           break;
       }
-      values.add(i - 1, value);
+      values.add(value);
     }
     return values;
   }
