@@ -53,7 +53,11 @@ public class FileOutputCollector implements RelationOutputCollector {
     writer.close();
   }
 
-  public static void initOutputRootDir(String outputRootDir) {
+  public static void setOutputRootDir(String outputRootDir) {
     FileOutputCollector.outputRootDir = outputRootDir;
+  }
+
+  public static String getOutputRootDir() {
+    return FileOutputCollector.outputRootDir;
   }
 }

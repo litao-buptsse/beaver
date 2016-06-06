@@ -3,8 +3,12 @@ package com.sogou.beaver.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Enumeration;
@@ -58,5 +62,31 @@ public class CommonUtils {
 
   public static String formatSQLValue(String str) {
     return str == null ? null : String.format("'%s'", str.replace("'", "''"));
+  }
+
+  public static String readFile(String file, long page, long size, boolean withHeader)
+      throws IOException {
+    BufferedReader reader = Files.newBufferedReader(Paths.get(file));
+    StringBuffer sb = new StringBuffer();
+    if (withHeader) {
+      String header = reader.readLine();
+      sb.append(header + "\n");
+    }
+    String line;
+    long n = 0;
+    long start = (page - 1) * size;
+    long end = page * size - 1;
+    while ((line = reader.readLine()) != null) {
+      if (n > end) {
+        break;
+      } else {
+        if (n >= start) {
+          sb.append(line + "\n");
+        }
+      }
+      n++;
+    }
+    reader.close();
+    return sb.toString();
   }
 }

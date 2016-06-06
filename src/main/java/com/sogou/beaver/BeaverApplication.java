@@ -19,7 +19,7 @@ public class BeaverApplication extends Application<BeaverConfiguration> {
   public void run(BeaverConfiguration configuration, Environment environment) throws Exception {
     // init FileOutputCollector output root dir
     // TODO Support config output root directory per FileOutputCollector instance
-    FileOutputCollector.initOutputRootDir(configuration.getOutputCollectorRootDir());
+    FileOutputCollector.setOutputRootDir(configuration.getOutputCollectorRootDir());
 
     // start mysql connection pool
     JDBCConnectionPool mysqlConnectionPool = configuration.constructJDBCConnectionPool(

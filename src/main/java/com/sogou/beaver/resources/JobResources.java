@@ -1,5 +1,6 @@
 package com.sogou.beaver.resources;
 
+import com.sogou.beaver.core.collector.FileOutputCollector;
 import com.sogou.beaver.core.plan.ExecutionPlan;
 import com.sogou.beaver.core.plan.ParseException;
 import com.sogou.beaver.core.plan.QueryPlan;
@@ -7,6 +8,7 @@ import com.sogou.beaver.core.plan.QueryPlanParser;
 import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.Job;
+import com.sogou.beaver.util.CommonUtils;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
@@ -42,17 +44,31 @@ public class JobResources {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public List<Job> getJobs(@QueryParam("userId") String userId,
-                           @QueryParam("page") long page, @QueryParam("size") long size)
+                           @DefaultValue("1") @QueryParam("page") long page,
+                           @DefaultValue("10") @QueryParam("size") long size)
       throws ConnectionPoolException, SQLException {
     return dao.getJobsByUserId(userId, page, size);
   }
 
   @GET
-  @Path("/download")
+  @Path("/download/{id}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  public Response download(@QueryParam("id") long id) throws FileNotFoundException {
-    return Response.ok(new FileInputStream("data/" + id + ".data"))
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + id + ".csv")
+  public Response download(@PathParam("id") long id) throws FileNotFoundException {
+    String localFile = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
+    String downloadFileName = String.format("%s.csv", id);
+    return Response.ok(new FileInputStream(localFile))
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + downloadFileName)
         .build();
+  }
+
+  @GET
+  @Path("/result/{id}")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String getResult(@PathParam("id") long id,
+                          @DefaultValue("1") @QueryParam("page") long page,
+                          @DefaultValue("10") @QueryParam("size") long size)
+      throws IOException {
+    String localFile = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
+    return CommonUtils.readFile(localFile, page, size, true);
   }
 }
