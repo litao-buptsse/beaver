@@ -5,9 +5,9 @@
 | ID | Type | Description | Resources | Http Method | URL Params | Request Data(json) | Reponse Data(json) | Comment |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | 1 | Job | 创建任务 | /jobs | POST | | $job | | |
-| 2 | Job | 获取任务列表 | /jobs | GET | userId=$userId | | $jobList | |
+| 2 | Job | 获取任务列表 | /jobs | GET | userId=$userId, page=$page, size=$size | | $jobList | |
 | 3 | Job | 获取运行结果 | /jobs/result/$id | GET | | | $result | |
-| 4 | Job | 下载运行结果 | /jobs/download/$id | GET | | | | |
+| 4 | Job | 下载运行结果 | /jobs/download/$id | GET | page=$page, size=$size | | | |
 | 5 | TableInfo | 获取数据仓库元信息 | /tableInfos | GET | tableName=$tableName | | $tableInfo | |
 | 6 | MethodInfo | 获取函数元信息 | /methodInfos | GET | | | $methodInfo | |
 
