@@ -1,6 +1,9 @@
 package com.sogou.beaver.core.plan;
 
+import com.sogou.beaver.util.CommonUtils;
+
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 /**
  * Created by Tao Li on 2016/6/1.
@@ -24,12 +27,77 @@ public class QueryPlanParser {
       case "compound":
         try {
           QueryPlan.CompoundQuery query = QueryPlan.CompoundQuery.fromJson(queryPlan.getQuery());
-          return "hello, world";
+          return parseCompoundQuery(query);
         } catch (IOException e) {
           throw new ParseException("Failde to parse query: " + queryPlan.getQuery());
         }
       default:
         throw new ParseException("Not support query type: " + queryPlan.getType());
     }
+  }
+
+  // TODO support more complex compound query
+  private static String parseCompoundQuery(QueryPlan.CompoundQuery query) {
+    String tableName = query.getTableName();
+    String metricSQL = query.getMetrics().stream()
+        .map(metric -> String.format("%s(%s) AS %s",
+            metric.getMethod(),
+            parseMetricMethod(metric.getField()),
+            metric.getAlias()))
+        .collect(Collectors.joining(", "));
+    String bucketMetricSQL = query.getBuckets().stream()
+        .map(bucket -> String.format("%s AS %s",
+            bucket.getField(),
+            bucket.getAlias()))
+        .collect(Collectors.joining(", "));
+    String timeRangeSQL = String.format("logdate>=%s AND logdate<=%s",
+        CommonUtils.formatSQLValue(query.getTimeRange().getStartTime()),
+        CommonUtils.formatSQLValue(query.getTimeRange().getEndTime()));
+    String filterSQL = query.getFilters().stream()
+        .map(filter -> String.format("%s %s %s",
+            filter.getField(),
+            parseFilterMethod(filter.getMethod()),
+            CommonUtils.formatSQLValue(filter.getValue())))
+        .collect(Collectors.joining(" AND "));
+    String bucketSQL = query.getBuckets().stream()
+        .map(bucket -> bucket.getField())
+        .collect(Collectors.joining(", "));
+
+    String sql = String.format("SELECT %s, %s FROM %s WHERE %s AND %s GROUP BY %s",
+        bucketMetricSQL, metricSQL, tableName, timeRangeSQL, filterSQL, bucketSQL);
+    System.out.println(sql);
+    return sql;
+  }
+
+  private static String parseMetricMethod(String method) {
+    return method;
+  }
+
+  private static String parseFilterMethod(String method) {
+    String realMethod;
+    switch (method) {
+      case "eq":
+        realMethod = "=";
+        break;
+      case "ne":
+        realMethod = "!=";
+        break;
+      case "gt":
+        realMethod = ">";
+        break;
+      case "ge":
+        realMethod = ">=";
+        break;
+      case "lt":
+        realMethod = "<";
+        break;
+      case "le":
+        realMethod = "<=";
+        break;
+      default:
+        realMethod = null;
+        break;
+    }
+    return realMethod;
   }
 }
