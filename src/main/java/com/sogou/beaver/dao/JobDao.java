@@ -117,7 +117,7 @@ public class JobDao {
     return jobs.size() == 0 ? null : jobs.get(0);
   }
 
-  public List<Job> getJobsByState(String state, long limit)
+  public List<Job> getJobsByState(String state, int limit)
       throws ConnectionPoolException, SQLException {
     return getJobs(String.format("WHERE state='%s' ORDER BY ID ASC LIMIT %s", state, limit));
   }
@@ -132,7 +132,7 @@ public class JobDao {
     return getJob(String.format("WHERE id=%s ORDER BY ID ASC", id));
   }
 
-  public List<Job> getJobsByUserId(String userId, long page, long size)
+  public List<Job> getJobsByUserId(String userId, int page, int size)
       throws ConnectionPoolException, SQLException {
     return getJobs(String.format(
         "WHERE userId='%s' ORDER BY id DESC LIMIT %s, %s", userId, (page - 1) * size, size));

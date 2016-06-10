@@ -8,14 +8,12 @@ import com.sogou.beaver.core.plan.QueryPlanParser;
 import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.Job;
-import com.sogou.beaver.util.CommonUtils;
+import com.sogou.beaver.model.JobResult;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -44,8 +42,8 @@ public class JobResources {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public List<Job> getJobs(@QueryParam("userId") String userId,
-                           @DefaultValue("1") @QueryParam("page") long page,
-                           @DefaultValue("10") @QueryParam("size") long size)
+                           @DefaultValue("1") @QueryParam("page") int page,
+                           @DefaultValue("10") @QueryParam("size") int size)
       throws ConnectionPoolException, SQLException {
     return dao.getJobsByUserId(userId, page, size);
   }
@@ -53,22 +51,21 @@ public class JobResources {
   @GET
   @Path("/download/{id}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  public Response download(@PathParam("id") long id) throws FileNotFoundException {
-    String localFile = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
-    String downloadFileName = String.format("%s.csv", id);
-    return Response.ok(new FileInputStream(localFile))
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + downloadFileName)
+  public Response download(@PathParam("id") long id) throws IOException {
+    String file = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
+    String downloadFile = String.format("%s.csv", id);
+    return Response.ok(FileOutputCollector.getStreamingOutput(file))
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + downloadFile)
         .build();
   }
 
   @GET
   @Path("/result/{id}")
-  @Produces(MediaType.TEXT_PLAIN)
-  public String getResult(@PathParam("id") long id,
-                          @DefaultValue("1") @QueryParam("page") long page,
-                          @DefaultValue("10") @QueryParam("size") long size)
-      throws IOException {
-    String localFile = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
-    return CommonUtils.readFile(localFile, page, size, true);
+  @Produces(MediaType.APPLICATION_JSON)
+  public JobResult getResult(@PathParam("id") long id,
+                             @DefaultValue("1") @QueryParam("page") int page,
+                             @DefaultValue("10") @QueryParam("size") int size) throws IOException {
+    String file = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
+    return FileOutputCollector.getJobResult(file, page, size);
   }
 }
