@@ -5,10 +5,11 @@
 | ID | Type | Description | Resources | Http Method | URL Params | Request Data(json) | Reponse Data(json) | Comment |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | 1 | Job | 创建任务 | /jobs | POST | | $job | | |
-| 2 | Job | 获取任务列表 | /jobs | GET | userId=$userId, page=$page, size=$size | | $jobList | |
+| 2 | Job | 获取任务列表 | /jobs | GET | userId=$userId, page=$page, size=$size | | $jobs | |
 | 3 | Job | 获取运行结果 | /jobs/result/$id | GET | | | $result | |
 | 4 | Job | 下载运行结果 | /jobs/download/$id | GET | page=$page, size=$size | | | |
-| 5 | TableInfo | 获取数据仓库元信息 | /tableInfos | GET | tableName=$tableName | | $tableInfo | |
+| 5 | TableInfo | 获取表元信息 | /tableInfos | GET | | | $tableInfos | |
+| 5 | FieldInfo | 获取字段元信息 | /fieldInfos | GET | tableId=$tableId | | $fieldInfos | |
 | 6 | MethodInfo | 获取函数元信息 | /methodInfos | GET | | | $methodInfo | |
 
 ## Resources Format
@@ -52,13 +53,13 @@ sql
     {
       method: $method,
       field: $field,
-      alias: $alias
+      alias: $alias // optional
     }
   ],
   buckets: [
     {
       field: $field,
-      alias: $alias
+      alias: $alias // optional
     }
   ],
   filters: [
@@ -80,19 +81,21 @@ sql
 ```
 {
   id: $id,
-  tableName: $tableName,
-  frequency: $frequency,
-  fields: [
-    {
-      field: $field,
-      description: $description,
-      enum: $canEnum,
-      values: [
-        value: $value,
-        description: $description
-      ]
-    }
-  ]
+  name: $name,
+  description: $description,
+  frequency: $frequency
+}
+```
+
+### FieldInfo Resource Format
+
+```
+{
+  id: $id,
+  tableId: $tableId,
+  name: $name,
+  description: $description,
+  type: $type
 }
 ```
 
@@ -100,17 +103,21 @@ sql
 
 ```
 {
-  metrics: [
-    method: $method,
-    description: $description
+  metricMethods: [
+    {
+      id: $id,
+      name: $name,
+      description: $description,
+      types: $types
+    }
   ],
-  buckets: [
-    method: $method,
-    description: $description
-  ],
-  filters: [
-    method: $method,
-    description: $description
+  filterMethods: [
+    {
+      id: $id,
+      name: $name,
+      description: $description,
+      types: $types
+    }
   ]
 }
 ```

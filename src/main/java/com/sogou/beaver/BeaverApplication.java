@@ -2,9 +2,15 @@ package com.sogou.beaver;
 
 import com.sogou.beaver.core.collector.FileOutputCollector;
 import com.sogou.beaver.core.execution.JobExecuteController;
+import com.sogou.beaver.dao.FieldInfoDao;
 import com.sogou.beaver.dao.JobDao;
+import com.sogou.beaver.dao.MethodInfoDao;
+import com.sogou.beaver.dao.TableInfoDao;
 import com.sogou.beaver.db.JDBCConnectionPool;
+import com.sogou.beaver.resources.FieldInfoResources;
 import com.sogou.beaver.resources.JobResources;
+import com.sogou.beaver.resources.MethodInfoResources;
+import com.sogou.beaver.resources.TableInfoResources;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -26,6 +32,9 @@ public class BeaverApplication extends Application<BeaverConfiguration> {
         configuration.getMysqlConfiguration());
     mysqlConnectionPool.start();
     JobDao jobDao = new JobDao(mysqlConnectionPool);
+    TableInfoDao tableInfoDao = new TableInfoDao(mysqlConnectionPool);
+    FieldInfoDao fieldInfoDao = new FieldInfoDao(mysqlConnectionPool);
+    MethodInfoDao methodInfoDao = new MethodInfoDao(mysqlConnectionPool);
 
     // start presto connection pool
     Properties info = new Properties();
@@ -41,6 +50,9 @@ public class BeaverApplication extends Application<BeaverConfiguration> {
 
     // register resources
     environment.jersey().register(new JobResources(jobDao));
+    environment.jersey().register(new TableInfoResources(tableInfoDao));
+    environment.jersey().register(new FieldInfoResources(fieldInfoDao));
+    environment.jersey().register(new MethodInfoResources(methodInfoDao));
 
     // add shutdown hook
     Runtime.getRuntime().addShutdownHook(new Thread() {

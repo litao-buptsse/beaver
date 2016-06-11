@@ -2,6 +2,7 @@ package com.sogou.beaver.dao;
 
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.db.JDBCConnectionPool;
+import com.sogou.beaver.db.JDBCUtils;
 import com.sogou.beaver.model.Job;
 import com.sogou.beaver.util.CommonUtils;
 import org.slf4j.Logger;
@@ -29,20 +30,8 @@ public class JobDao {
     this.pool = pool;
   }
 
-  private boolean execute(String sql) throws ConnectionPoolException, SQLException {
-    LOG.debug("sql: " + sql);
-    Connection conn = pool.getConnection();
-    try {
-      try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-        return stmt.execute();
-      }
-    } finally {
-      pool.releaseConnection(conn);
-    }
-  }
-
   public void createJob(Job job) throws ConnectionPoolException, SQLException {
-    execute(String.format(
+    JDBCUtils.execute(pool, String.format(
         "INSERT INTO %s (userId, state, startTime, queryPlan, executionPlan) " +
             "VALUES(%s, 'WAIT', %s, %s, %s)", TABLE_NAME,
         CommonUtils.formatSQLValue(job.getUserId()),
@@ -52,7 +41,7 @@ public class JobDao {
   }
 
   private void updateJob(Job job, String whereClause) throws ConnectionPoolException, SQLException {
-    execute(String.format(
+    JDBCUtils.execute(pool, String.format(
         "UPDATE %s SET userId=%s, state=%s, startTime=%s, endTime=%s, " +
             "queryPlan=%s, executionPlan=%s, host=%s %s", TABLE_NAME,
         CommonUtils.formatSQLValue(job.getUserId()),
@@ -76,7 +65,7 @@ public class JobDao {
 
   public void updateJobsStateAndHostByIds(String state, String host, long[] ids)
       throws ConnectionPoolException, SQLException {
-    execute(String.format(
+    JDBCUtils.execute(pool, String.format(
         "UPDATE %s SET state=%s, host=%s WHERE id in (%s)", TABLE_NAME,
         CommonUtils.formatSQLValue(state),
         CommonUtils.formatSQLValue(host),
