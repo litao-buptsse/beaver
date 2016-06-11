@@ -24,8 +24,7 @@
   endTime: $endTime,
   queryPlan: $queryPlan,  // needed
   executionPlan: $executionPlan,
-  host: $host,
-  reportURL: $reportURL
+  host: $host
 }
 ```
 

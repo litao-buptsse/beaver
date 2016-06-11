@@ -14,14 +14,13 @@ public class Job {
   private String queryPlan;
   private String executionPlan;
   private String host;
-  private String reportURL;
 
   public Job() {
     // Jackson deserialization
   }
 
   public Job(long id, String userId, String state, String startTime, String endTime,
-             String queryPlan, String executionPlan, String host, String reportURL) {
+             String queryPlan, String executionPlan, String host) {
     this.id = id;
     this.userId = userId;
     this.state = state;
@@ -30,7 +29,6 @@ public class Job {
     this.queryPlan = queryPlan;
     this.executionPlan = executionPlan;
     this.host = host;
-    this.reportURL = reportURL;
   }
 
   @JsonProperty
@@ -103,14 +101,5 @@ public class Job {
 
   public void setHost(String host) {
     this.host = host;
-  }
-
-  @JsonProperty
-  public String getReportURL() {
-    return reportURL;
-  }
-
-  public void setReportURL(String reportURL) {
-    this.reportURL = reportURL;
   }
 }

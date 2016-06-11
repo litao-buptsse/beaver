@@ -54,7 +54,7 @@ public class JobDao {
   private void updateJob(Job job, String whereClause) throws ConnectionPoolException, SQLException {
     execute(String.format(
         "UPDATE %s SET userId=%s, state=%s, startTime=%s, endTime=%s, " +
-            "queryPlan=%s, executionPlan=%s, host=%s, reportURL=%s %s", TABLE_NAME,
+            "queryPlan=%s, executionPlan=%s, host=%s %s", TABLE_NAME,
         CommonUtils.formatSQLValue(job.getUserId()),
         CommonUtils.formatSQLValue(job.getState()),
         CommonUtils.formatSQLValue(job.getStartTime()),
@@ -62,7 +62,6 @@ public class JobDao {
         CommonUtils.formatSQLValue(job.getQueryPlan()),
         CommonUtils.formatSQLValue(job.getExecutionPlan()),
         CommonUtils.formatSQLValue(job.getHost()),
-        CommonUtils.formatSQLValue(job.getReportURL()),
         whereClause));
   }
 
@@ -100,8 +99,7 @@ public class JobDao {
                 rs.getString("endTime"),
                 rs.getString("queryPlan"),
                 rs.getString("executionPlan"),
-                rs.getString("host"),
-                rs.getString("reportURL")
+                rs.getString("host")
             ));
           }
           return jobs;
