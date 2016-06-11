@@ -2,12 +2,9 @@ package com.sogou.beaver.core.plan;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sogou.beaver.util.CommonUtils;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by Tao Li on 2016/6/1.
@@ -38,7 +35,7 @@ public class QueryPlan {
       }
 
       public String getAlias() {
-        return alias;
+        return alias != null && !alias.equals("") ? alias : String.format("%s_%s", method, field);
       }
 
       public void setAlias(String alias) {
@@ -83,7 +80,7 @@ public class QueryPlan {
       }
 
       public String getAlias() {
-        return alias;
+        return alias != null && !alias.equals("") ? alias : field;
       }
 
       public void setAlias(String alias) {
