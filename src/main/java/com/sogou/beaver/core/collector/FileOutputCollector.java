@@ -67,7 +67,7 @@ public class FileOutputCollector implements RelationOutputCollector {
     return FileOutputCollector.outputRootDir;
   }
 
-  public static JobResult getJobResult(String file, int page, int size) throws IOException {
+  public static JobResult getJobResult(String file, int start, int length) throws IOException {
     try (BufferedReader reader = Files.newBufferedReader(Paths.get(file))) {
       JobResult result = new JobResult();
 
@@ -79,10 +79,8 @@ public class FileOutputCollector implements RelationOutputCollector {
       List<String[]> values = new ArrayList<>();
       String line;
       long n = 0;
-      long start = (page - 1) * size;
-      long end = page * size - 1;
       while ((line = reader.readLine()) != null) {
-        if (n > end) {
+        if (n >= start + length) {
           break;
         } else {
           if (n >= start) {

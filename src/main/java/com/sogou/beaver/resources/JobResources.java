@@ -42,10 +42,10 @@ public class JobResources {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public List<Job> getJobs(@QueryParam("userId") String userId,
-                           @DefaultValue("1") @QueryParam("page") int page,
-                           @DefaultValue("10") @QueryParam("size") int size)
+                           @DefaultValue("0") @QueryParam("start") int start,
+                           @DefaultValue("10") @QueryParam("length") int length)
       throws ConnectionPoolException, SQLException {
-    return dao.getJobsByUserId(userId, page, size);
+    return dao.getJobsByUserId(userId, start, length);
   }
 
   @GET
@@ -63,9 +63,9 @@ public class JobResources {
   @Path("/result/{id}")
   @Produces(MediaType.APPLICATION_JSON)
   public JobResult getResult(@PathParam("id") long id,
-                             @DefaultValue("1") @QueryParam("page") int page,
-                             @DefaultValue("10") @QueryParam("size") int size) throws IOException {
+                             @DefaultValue("0") @QueryParam("start") int start,
+                             @DefaultValue("10") @QueryParam("length") int length) throws IOException {
     String file = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
-    return FileOutputCollector.getJobResult(file, page, size);
+    return FileOutputCollector.getJobResult(file, start, length);
   }
 }
