@@ -8,7 +8,7 @@ import com.sogou.beaver.core.plan.QueryPlanParser;
 import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.Job;
-import com.sogou.beaver.model.JobResult;
+import com.sogou.beaver.util.CommonUtils;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;
@@ -16,7 +16,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * Created by Tao Li on 6/1/16.
@@ -41,11 +40,12 @@ public class JobResources {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public List<Job> getJobs(@QueryParam("userId") String userId,
-                           @DefaultValue("0") @QueryParam("start") int start,
-                           @DefaultValue("10") @QueryParam("length") int length)
+  public Object getJobs(@QueryParam("userId") String userId,
+                        @DefaultValue("0") @QueryParam("start") int start,
+                        @DefaultValue("10") @QueryParam("length") int length,
+                        @QueryParam("callback") String callback)
       throws ConnectionPoolException, SQLException {
-    return dao.getJobsByUserId(userId, start, length);
+    return CommonUtils.formatJSONPObject(callback, dao.getJobsByUserId(userId, start, length));
   }
 
   @GET
@@ -62,10 +62,12 @@ public class JobResources {
   @GET
   @Path("/result/{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  public JobResult getResult(@PathParam("id") long id,
-                             @DefaultValue("0") @QueryParam("start") int start,
-                             @DefaultValue("10") @QueryParam("length") int length) throws IOException {
+  public Object getResult(@PathParam("id") long id,
+                          @DefaultValue("0") @QueryParam("start") int start,
+                          @DefaultValue("10") @QueryParam("length") int length,
+                          @QueryParam("callback") String callback) throws IOException {
     String file = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
-    return FileOutputCollector.getJobResult(file, start, length);
+    return CommonUtils.formatJSONPObject(callback,
+        FileOutputCollector.getJobResult(file, start, length));
   }
 }

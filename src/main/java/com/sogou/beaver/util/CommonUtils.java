@@ -1,5 +1,6 @@
 package com.sogou.beaver.util;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,5 +64,9 @@ public class CommonUtils {
   public static String formatCSVValue(String value) {
     String tmp = value.replace("\"", "\"\"");
     return tmp.contains(",") ? String.format("\"%s\"", tmp) : tmp;
+  }
+
+  public static Object formatJSONPObject(String callback, Object obj) {
+    return callback != null ? new JSONPObject(callback, obj) : obj;
   }
 }

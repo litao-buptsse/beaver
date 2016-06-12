@@ -2,11 +2,12 @@ package com.sogou.beaver.resources;
 
 import com.sogou.beaver.dao.MethodInfoDao;
 import com.sogou.beaver.db.ConnectionPoolException;
-import com.sogou.beaver.model.MethodInfo;
+import com.sogou.beaver.util.CommonUtils;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.sql.SQLException;
 
@@ -23,8 +24,8 @@ public class MethodInfoResources {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public MethodInfo getMethodInfo()
+  public Object getMethodInfo(@QueryParam("callback") String callback)
       throws ConnectionPoolException, SQLException {
-    return dao.getMethodInfo();
+    return CommonUtils.formatJSONPObject(callback, dao.getMethodInfo());
   }
 }
