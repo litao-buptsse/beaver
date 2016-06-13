@@ -39,8 +39,12 @@ public class FieldInfoDao {
                 rs.getLong("id"),
                 rs.getLong("tableId"),
                 rs.getString("name"),
+                rs.getString("comment"),
                 rs.getString("description"),
-                rs.getString("type")
+                rs.getString("dataType"),
+                rs.getString("fieldType"),
+                rs.getBoolean("isEnum"),
+                rs.getString("enumValues")
             ));
           }
           return fieldInfos;

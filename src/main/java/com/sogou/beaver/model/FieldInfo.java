@@ -10,17 +10,26 @@ public class FieldInfo {
   private long tableId;
   private String name;
   private String description;
-  private String type;
+  private String comment;
+  private String dataType;
+  private String fieldType;
+  private boolean isEnum;
+  private String enumValues;
 
   public FieldInfo() {
   }
 
-  public FieldInfo(long id, long tableId, String name, String description, String type) {
+  public FieldInfo(long id, long tableId, String name, String description, String comment,
+                   String dataType, String fieldType, boolean isEnum, String enumValues) {
     this.id = id;
     this.tableId = tableId;
     this.name = name;
     this.description = description;
-    this.type = type;
+    this.comment = comment;
+    this.dataType = dataType;
+    this.fieldType = fieldType;
+    this.isEnum = isEnum;
+    this.enumValues = enumValues;
   }
 
   @JsonProperty
@@ -60,11 +69,47 @@ public class FieldInfo {
   }
 
   @JsonProperty
-  public String getType() {
-    return type;
+  public String getComment() {
+    return comment;
   }
 
-  public void setType(String type) {
-    this.type = type;
+  public void setComment(String comment) {
+    this.comment = comment;
+  }
+
+  @JsonProperty
+  public String getDataType() {
+    return dataType;
+  }
+
+  public void setDataType(String dataType) {
+    this.dataType = dataType;
+  }
+
+  @JsonProperty
+  public String getFieldType() {
+    return fieldType;
+  }
+
+  public void setFieldType(String fieldType) {
+    this.fieldType = fieldType;
+  }
+
+  @JsonProperty
+  public boolean isEnum() {
+    return isEnum;
+  }
+
+  public void setEnum(boolean anEnum) {
+    isEnum = anEnum;
+  }
+
+  @JsonProperty
+  public String getEnumValues() {
+    return enumValues;
+  }
+
+  public void setEnumValues(String enumValues) {
+    this.enumValues = enumValues;
   }
 }

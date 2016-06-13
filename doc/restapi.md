@@ -95,7 +95,11 @@ sql
   tableId: $tableId,
   name: $name,
   description: $description,
-  type: $type
+  comment: $comment,
+  dataType: $dataType,
+  fieldType: $fieldType,
+  isEnum: $isEnum,
+  enumValues: $enumValues
 }
 ```
 
