@@ -36,6 +36,13 @@ public class FieldInfoDao {
         try (ResultSet rs = stmt.executeQuery()) {
           List<FieldInfo> fieldInfos = new ArrayList<>();
           while (rs.next()) {
+            FieldInfo.EnumValue[] enumValues = null;
+            try {
+              enumValues = FieldInfo.convertJsonToEnumValues(rs.getString("enumValues"));
+            } catch (IOException e) {
+              LOG.error("Failed to parse json", e);
+            }
+
             fieldInfos.add(new FieldInfo(
                 rs.getLong("id"),
                 rs.getLong("tableId"),
@@ -45,13 +52,11 @@ public class FieldInfoDao {
                 rs.getString("dataType"),
                 rs.getString("fieldType"),
                 rs.getBoolean("isEnum"),
-                FieldInfo.convertJsonToEnumValues(rs.getString("enumValues"))
+                enumValues
             ));
           }
           return fieldInfos;
         }
-      } catch (IOException e) {
-        throw new SQLException(e);
       }
     } finally {
       pool.releaseConnection(conn);
