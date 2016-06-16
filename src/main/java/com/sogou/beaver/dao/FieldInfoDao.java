@@ -6,6 +6,7 @@ import com.sogou.beaver.model.FieldInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -44,11 +45,13 @@ public class FieldInfoDao {
                 rs.getString("dataType"),
                 rs.getString("fieldType"),
                 rs.getBoolean("isEnum"),
-                rs.getString("enumValues")
+                FieldInfo.convertJsonToEnumValues(rs.getString("enumValues"))
             ));
           }
           return fieldInfos;
         }
+      } catch (IOException e) {
+        throw new SQLException(e);
       }
     } finally {
       pool.releaseConnection(conn);

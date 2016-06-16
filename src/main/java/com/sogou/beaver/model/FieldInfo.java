@@ -1,6 +1,9 @@
 package com.sogou.beaver.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 
 /**
  * Created by Tao Li on 6/11/16.
@@ -14,13 +17,44 @@ public class FieldInfo {
   private String dataType;
   private String fieldType;
   private boolean isEnum;
-  private String enumValues;
+  private EnumValue[] enumValues;
+
+  public static class EnumValue {
+    private String value;
+    private String description;
+
+    public EnumValue() {
+    }
+
+    public EnumValue(String value, String description) {
+      this.value = value;
+      this.description = description;
+    }
+
+    @JsonProperty
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
+
+    @JsonProperty
+    public String getDescription() {
+      return description;
+    }
+
+    public void setDescription(String description) {
+      this.description = description;
+    }
+  }
 
   public FieldInfo() {
   }
 
   public FieldInfo(long id, long tableId, String name, String description, String comment,
-                   String dataType, String fieldType, boolean isEnum, String enumValues) {
+                   String dataType, String fieldType, boolean isEnum, EnumValue[] enumValues) {
     this.id = id;
     this.tableId = tableId;
     this.name = name;
@@ -105,11 +139,16 @@ public class FieldInfo {
   }
 
   @JsonProperty
-  public String getEnumValues() {
+  public EnumValue[] getEnumValues() {
     return enumValues;
   }
 
-  public void setEnumValues(String enumValues) {
+  public void setEnumValues(EnumValue[] enumValues) {
     this.enumValues = enumValues;
+  }
+
+  public static EnumValue[] convertJsonToEnumValues(String json) throws IOException {
+    return json == null || json.equals("") ? null :
+        new ObjectMapper().readValue(json.getBytes(), EnumValue[].class);
   }
 }
