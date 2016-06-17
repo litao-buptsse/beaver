@@ -17,7 +17,6 @@ public class FieldInfo {
   private String dataType;
   private String fieldType;
   private boolean isEnum;
-  private EnumValue[] enumValues;
 
   public static class EnumValue {
     private String value;
@@ -54,7 +53,7 @@ public class FieldInfo {
   }
 
   public FieldInfo(long id, long tableId, String name, String description, String comment,
-                   String dataType, String fieldType, boolean isEnum, EnumValue[] enumValues) {
+                   String dataType, String fieldType, boolean isEnum) {
     this.id = id;
     this.tableId = tableId;
     this.name = name;
@@ -63,7 +62,6 @@ public class FieldInfo {
     this.dataType = dataType;
     this.fieldType = fieldType;
     this.isEnum = isEnum;
-    this.enumValues = enumValues;
   }
 
   @JsonProperty
@@ -136,19 +134,5 @@ public class FieldInfo {
 
   public void setEnum(boolean anEnum) {
     isEnum = anEnum;
-  }
-
-  @JsonProperty
-  public EnumValue[] getEnumValues() {
-    return enumValues;
-  }
-
-  public void setEnumValues(EnumValue[] enumValues) {
-    this.enumValues = enumValues;
-  }
-
-  public static EnumValue[] convertJsonToEnumValues(String json) throws IOException {
-    return json == null || json.equals("") ? null :
-        new ObjectMapper().readValue(json.getBytes(), EnumValue[].class);
   }
 }

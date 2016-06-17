@@ -10,7 +10,8 @@
 | 4 | Job | 下载运行结果 | /jobs/download/$id | GET | start=$start, length=$length | | | |
 | 5 | TableInfo | 获取表元信息 | /tableInfos | GET | | | $tableInfos | |
 | 6 | FieldInfo | 获取字段元信息 | /fieldInfos | GET | tableId=$tableId | | $fieldInfos | |
-| 7 | MethodInfo | 获取函数元信息 | /methodInfos | GET | | | $methodInfo | |
+| 7 | EnumInfo | 获取枚举元信息 | /enumInfos | GET | fieldId=$fieldId | | $enumInfos | |
+| 8 | MethodInfo | 获取函数元信息 | /methodInfos | GET | | | $methodInfo | |
 
 ## Resources Format
 
@@ -98,8 +99,18 @@ sql
   comment: $comment,
   dataType: $dataType,
   fieldType: $fieldType,
-  isEnum: $isEnum,
-  enumValues: $enumValues
+  isEnum: $isEnum
+}
+```
+
+### EnumInfo Resource Format
+
+```
+{
+  id: $id,
+  fieldId: $fieldId,
+  value: $value,
+  description: $description
 }
 ```
 
