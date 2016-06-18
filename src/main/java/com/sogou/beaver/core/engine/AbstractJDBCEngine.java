@@ -21,14 +21,15 @@ public abstract class AbstractJDBCEngine extends AbstractSQLEngine {
   private final Logger LOG = LoggerFactory.getLogger(AbstractJDBCEngine.class);
 
   @Override
-  public boolean doExecute(String sql, RelationOutputCollector collector) throws SQLException {
+  public boolean doExecute(String sql, RelationOutputCollector collector)
+      throws EngineExecutionException {
     JDBCConnectionPool pool = getJDBCConnectionPool();
     Connection conn = null;
     try {
       conn = pool.getConnection();
       return doExecute(sql, conn, collector);
     } catch (ConnectionPoolException e) {
-      throw new SQLException("Failed to get connection", e);
+      throw new EngineExecutionException("Failed to get connection", e);
     } finally {
       try {
         pool.releaseConnection(conn);
@@ -39,7 +40,7 @@ public abstract class AbstractJDBCEngine extends AbstractSQLEngine {
   }
 
   public abstract boolean doExecute(String sql, Connection conn, RelationOutputCollector collector)
-      throws SQLException;
+      throws EngineExecutionException;
 
   public abstract JDBCConnectionPool getJDBCConnectionPool();
 

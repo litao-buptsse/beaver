@@ -1,5 +1,6 @@
 package com.sogou.beaver.core.execution;
 
+import com.sogou.beaver.core.engine.EngineExecutionException;
 import com.sogou.beaver.core.engine.PrestoEngine;
 import com.sogou.beaver.core.engine.SQLEngine;
 import com.sogou.beaver.core.plan.ExecutionPlan;
@@ -56,7 +57,7 @@ public class JobExecuteController implements Runnable {
                   if (engine.execute(plan.getSql())) {
                     state = "SUCC";
                   }
-                } catch (SQLException e) {
+                } catch (EngineExecutionException e) {
                   LOG.error("Failed to execute sql: " + plan.getSql(), e);
                 }
               default:

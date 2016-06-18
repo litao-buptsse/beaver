@@ -23,7 +23,7 @@ public class PrestoEngine extends AbstractJDBCEngine {
 
   @Override
   public boolean doExecute(String sql, Connection conn, RelationOutputCollector collector)
-      throws SQLException {
+      throws EngineExecutionException {
     try (Statement stmt = conn.createStatement()) {
       try (ResultSet rs = stmt.executeQuery(sql)) {
         ResultSetMetaData rsmd = rs.getMetaData();
@@ -35,8 +35,10 @@ public class PrestoEngine extends AbstractJDBCEngine {
         }
       }
       return true;
+    } catch (SQLException e) {
+      throw new EngineExecutionException("Failed to execute sql: " + sql, e);
     } catch (IOException e) {
-      throw new SQLException("Failed to collect result", e);
+      throw new EngineExecutionException("Failed to collect result", e);
     }
   }
 
