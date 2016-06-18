@@ -9,9 +9,11 @@ if [ $# -ne 1 ]; then
 fi
 
 jobId=$1
+
 hdfsRoot=beaver/output
 hdfsOutput=$hdfsRoot/$jobId
-localOutput=$dir/data/$jobId.data
+hdfsSchemaOutput=$hdfsOutput/schema
+hdfsDataOutput=$hdfsOutput/data
 
 hadoop fs -mkdir -p $hdfsRoot
 hadoop fs -rm -r $hdfsOutput
@@ -27,5 +29,12 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+localOutput=$dir/data/$jobId
+localSchemaOutput=$localOutput/$jobId.schema
+localDataOutput=$localOutput/$jobId.data
+
 rm -f $localOutput
-hadoop fs -getmerge $hdfsOutput/part-* $localOutput
+mkdir -p $localOutput
+
+hadoop fs -getmerge $hdfsSchemaOutput/part-* $localSchemaOutput
+hadoop fs -getmerge $hdfsDataOutput/part-* $localDataOutput
