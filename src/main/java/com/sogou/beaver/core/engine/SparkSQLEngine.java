@@ -14,10 +14,10 @@ public class SparkSQLEngine implements SQLEngine {
 
   @Override
   public boolean execute(String sql) throws EngineExecutionException {
+    // TODO support dynamic config spark sql executor resources by input volume and sql complexity
     String command = String.format(
         "echo \"%s\" | bin/spark_sql_engine.sh %s >logs/jobs/%s.log 2>&1",
         sql, jobId, jobId);
-    System.out.println(command);
     ProcessBuilder builder = new ProcessBuilder("bin/runner.py", command);
     Process process = null;
     try {

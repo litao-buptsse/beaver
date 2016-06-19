@@ -50,7 +50,7 @@ public class QueryPlanParser {
     }
 
     long startTimestamp = CommonUtils.convertStringToTimestamp(startTime, timeFormat);
-    long endTimestamp = CommonUtils.convertStringToTimestamp(startTime, timeFormat);
+    long endTimestamp = CommonUtils.convertStringToTimestamp(endTime, timeFormat);
     return (endTimestamp - startTimestamp) / 1000 / 60 + 60;
   }
 
