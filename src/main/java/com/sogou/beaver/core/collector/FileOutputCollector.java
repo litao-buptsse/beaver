@@ -18,7 +18,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by Tao Li on 2016/6/3.
@@ -28,58 +27,95 @@ public class FileOutputCollector implements RelationOutputCollector {
   private final static String FIELD_SEPARATOR = "\001";
   private final static String RECORD_SEPARATOR = "\n";
   private final static Charset CHARSET = StandardCharsets.UTF_8;
-  private static String outputRootDir = "data";
-  private BufferedWriter writer;
+  private static String OUTPUT_ROOT_DIR = "data";
+  private static String DATA_FILE_POSTFIX = ".data";
+  private static String SCHEMA_FILE_POSTFIX = ".schema";
 
-  public FileOutputCollector(String fileName) throws IOException {
-    Path rootDir = Paths.get(outputRootDir);
-    if (!Files.exists(rootDir)) {
-      Files.createDirectory(rootDir);
-    }
-    Path file = Paths.get(rootDir + FILE_SEPARATOR + fileName);
-    Files.createFile(file);
-    writer = Files.newBufferedWriter(file, CHARSET, StandardOpenOption.WRITE);
+  private long jobId;
+  private BufferedWriter dataFileWriter;
+  private boolean isFirstLine = true;
+
+  private static Path getOutputDir(long jobId) {
+    return Paths.get(CommonUtils.formatPath(FILE_SEPARATOR,
+        OUTPUT_ROOT_DIR, String.valueOf(jobId)));
+  }
+
+  private static Path getDataFile(long jobId) {
+    return Paths.get(CommonUtils.formatPath(FILE_SEPARATOR,
+        OUTPUT_ROOT_DIR, String.valueOf(jobId),
+        String.valueOf(jobId) + DATA_FILE_POSTFIX));
+  }
+
+  private static Path getSchemaFile(long jobId) {
+    return Paths.get(CommonUtils.formatPath(FILE_SEPARATOR,
+        OUTPUT_ROOT_DIR, String.valueOf(jobId),
+        String.valueOf(jobId) + SCHEMA_FILE_POSTFIX));
+  }
+
+  public FileOutputCollector(long jobId) throws IOException {
+    this.jobId = jobId;
+
+    Path outputDir = getOutputDir(jobId);
+    Files.deleteIfExists(outputDir);
+    Files.createDirectory(outputDir);
+
+    Path dataFile = getDataFile(jobId);
+    Files.createFile(dataFile);
+    dataFileWriter = Files.newBufferedWriter(dataFile, CHARSET, StandardOpenOption.WRITE);
   }
 
   @Override
   public void initColumnMetas(List<ColumnMeta> columnMetadatas) throws IOException {
     String header = columnMetadatas.stream()
         .map(meta -> meta.getColumnName()).collect(Collectors.joining(FIELD_SEPARATOR));
-    writer.write(header);
+
+    Path schemaFile = getSchemaFile(jobId);
+    Files.createFile(schemaFile);
+    BufferedWriter schemaFileWriter = Files.newBufferedWriter(
+        schemaFile, CHARSET, StandardOpenOption.WRITE);
+    schemaFileWriter.write(header);
+    schemaFileWriter.close();
   }
 
   @Override
   public void collect(List<String> values) throws IOException {
-    String line = RECORD_SEPARATOR + values.stream().collect(Collectors.joining(FIELD_SEPARATOR));
-    writer.write(line);
+    String line = values.stream().collect(Collectors.joining(FIELD_SEPARATOR));
+    if (isFirstLine) {
+      dataFileWriter.write(line);
+      isFirstLine = false;
+    } else {
+      dataFileWriter.write(RECORD_SEPARATOR + line);
+    }
   }
 
   @Override
   public void close() throws IOException {
-    writer.close();
+    dataFileWriter.close();
   }
 
   public static void setOutputRootDir(String outputRootDir) {
-    FileOutputCollector.outputRootDir = outputRootDir;
+    FileOutputCollector.OUTPUT_ROOT_DIR = outputRootDir;
   }
 
   public static String getOutputRootDir() {
-    return FileOutputCollector.outputRootDir;
+    return FileOutputCollector.OUTPUT_ROOT_DIR;
   }
 
-  public static JobResult getJobResult(String file, int start, int length) throws IOException {
-    try (BufferedReader reader = Files.newBufferedReader(Paths.get(file))) {
-      JobResult result = new JobResult();
+  public static JobResult getJobResult(long jobId, int start, int length) throws IOException {
+    JobResult result = new JobResult();
 
-      String headers = reader.readLine();
+    try (BufferedReader schemaFileReader = Files.newBufferedReader(getSchemaFile(jobId))) {
+      String headers = schemaFileReader.readLine();
       if (headers != null) {
         result.setHeaders(headers.split(FIELD_SEPARATOR));
       }
+    }
 
+    try (BufferedReader dataFileReader = Files.newBufferedReader(getDataFile(jobId))) {
       List<String[]> values = new ArrayList<>();
       String line;
       long n = 0;
-      while ((line = reader.readLine()) != null) {
+      while ((line = dataFileReader.readLine()) != null) {
         if (n >= start + length) {
           break;
         } else {
@@ -90,22 +126,30 @@ public class FileOutputCollector implements RelationOutputCollector {
         n++;
       }
       result.setValues(values);
-
-      return result;
     }
+
+    return result;
   }
 
-  public static StreamingOutput getStreamingOutput(String file) {
+  public static StreamingOutput getStreamingOutput(long jobId) {
     return outputStream -> {
-      try (BufferedReader reader = Files.newBufferedReader(Paths.get(file))) {
+      try (BufferedReader schemaFileReader = Files.newBufferedReader(getSchemaFile(jobId))) {
+        String headers = schemaFileReader.readLine();
+        if (headers != null) {
+          String record = CommonUtils.formatCSVRecord(headers.split(FIELD_SEPARATOR));
+          outputStream.write((record + RECORD_SEPARATOR).getBytes("GBK"));
+        }
+      }
+
+      try (BufferedReader reader = Files.newBufferedReader(getDataFile(jobId))) {
         String line;
         while ((line = reader.readLine()) != null) {
-          outputStream.write((Stream.of(line.split(FIELD_SEPARATOR))
-              .map(value -> CommonUtils.formatCSVValue(value))
-              .collect(Collectors.joining(",")) + RECORD_SEPARATOR).getBytes("GBK"));
+          String record = CommonUtils.formatCSVRecord(line.split(FIELD_SEPARATOR));
+          outputStream.write((record + RECORD_SEPARATOR).getBytes("GBK"));
         }
-        outputStream.flush();
       }
+
+      outputStream.flush();
     };
   }
 }

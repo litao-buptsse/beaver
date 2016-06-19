@@ -14,11 +14,11 @@ import java.util.List;
  */
 public class PrestoEngine extends AbstractJDBCEngine {
   private final JDBCConnectionPool pool;
-  private final String dataFile;
+  private final long jobId;
 
   public PrestoEngine(JDBCConnectionPool pool, long jobId) {
     this.pool = pool;
-    this.dataFile = jobId + ".data";
+    this.jobId = jobId;
   }
 
   @Override
@@ -49,6 +49,6 @@ public class PrestoEngine extends AbstractJDBCEngine {
 
   @Override
   public RelationOutputCollector getRelationOutputCollector() throws IOException {
-    return new FileOutputCollector(dataFile);
+    return new FileOutputCollector(jobId);
   }
 }

@@ -54,7 +54,7 @@ public class JobResources {
   public Response download(@PathParam("id") long id) throws IOException {
     String file = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
     String downloadFile = String.format("%s.csv", id);
-    return Response.ok(FileOutputCollector.getStreamingOutput(file))
+    return Response.ok(FileOutputCollector.getStreamingOutput(id))
         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + downloadFile)
         .build();
   }
@@ -66,8 +66,7 @@ public class JobResources {
                           @DefaultValue("0") @QueryParam("start") int start,
                           @DefaultValue("10") @QueryParam("length") int length,
                           @QueryParam("callback") String callback) throws IOException {
-    String file = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
     return CommonUtils.formatJSONPObject(callback,
-        FileOutputCollector.getJobResult(file, start, length));
+        FileOutputCollector.getJobResult(id, start, length));
   }
 }

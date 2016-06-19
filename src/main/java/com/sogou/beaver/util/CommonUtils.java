@@ -4,11 +4,14 @@ import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Enumeration;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by Tao Li on 2016/6/1.
@@ -66,7 +69,17 @@ public class CommonUtils {
     return tmp.contains(",") ? String.format("\"%s\"", tmp) : tmp;
   }
 
+  public static String formatCSVRecord(String[] values) throws UnsupportedEncodingException {
+    return Stream.of(values)
+        .map(value -> CommonUtils.formatCSVValue(value))
+        .collect(Collectors.joining(","));
+  }
+
   public static Object formatJSONPObject(String callback, Object obj) {
     return callback != null ? new JSONPObject(callback, obj) : obj;
+  }
+
+  public static String formatPath(String fileSeperator, String... parts) {
+    return Stream.of(parts).collect(Collectors.joining(fileSeperator));
   }
 }
