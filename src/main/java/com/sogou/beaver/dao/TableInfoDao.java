@@ -26,8 +26,9 @@ public class TableInfoDao {
     this.pool = pool;
   }
 
-  public List<TableInfo> getAllTableInfos() throws ConnectionPoolException, SQLException {
-    String sql = String.format("SELECT * FROM %s", TABLE_NAME);
+  private List<TableInfo> getTableInfos(String whereClause)
+      throws ConnectionPoolException, SQLException {
+    String sql = String.format("SELECT * FROM %s %s", TABLE_NAME, whereClause);
     Connection conn = pool.getConnection();
     try {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -47,5 +48,18 @@ public class TableInfoDao {
     } finally {
       pool.releaseConnection(conn);
     }
+  }
+
+  private TableInfo getTableInfo(String whereClause) throws ConnectionPoolException, SQLException {
+    List<TableInfo> tableInfos = getTableInfos(whereClause);
+    return tableInfos.size() == 0 ? null : tableInfos.get(0);
+  }
+
+  public List<TableInfo> getAllTableInfos() throws ConnectionPoolException, SQLException {
+    return getTableInfos("");
+  }
+
+  public TableInfo getTableInfoByName(String name) throws ConnectionPoolException, SQLException {
+    return getTableInfo(String.format("WHERE name='%s'", name));
   }
 }

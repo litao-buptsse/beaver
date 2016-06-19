@@ -1,10 +1,15 @@
 package com.sogou.beaver.core.plan;
 
+import com.sogou.beaver.dao.TableInfoDao;
+import com.sogou.beaver.db.ConnectionPoolException;
+import com.sogou.beaver.db.JDBCConnectionPool;
+import com.sogou.beaver.model.TableInfo;
 import com.sogou.beaver.util.CommonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,6 +19,12 @@ import java.util.stream.Stream;
 public class QueryPlanParser {
   private final static Logger LOG = LoggerFactory.getLogger(QueryPlanParser.class);
 
+  private static JDBCConnectionPool pool;
+
+  public static void setJDBCConnectionPool(JDBCConnectionPool pool) {
+    QueryPlanParser.pool = pool;
+  }
+
   public static ExecutionPlan parse(QueryPlan queryPlan) throws ParseException {
     String engine = parseEngine(queryPlan);
     String sql = parseSQL(queryPlan);
@@ -21,8 +32,58 @@ public class QueryPlanParser {
     return executionPlan;
   }
 
-  private static String parseEngine(QueryPlan queryPlan) {
-    return "presto";
+  private static long getTimeIntervalMinutes(String startTime, String endTime, String frequency)
+      throws ParseException {
+    String timeFormat;
+    switch (frequency) {
+      case "DAY":
+        timeFormat = "yyyyMMdd";
+        break;
+      case "HOUR":
+        timeFormat = "yyyyMMddHH";
+        break;
+      case "5MIN":
+        timeFormat = "yyyyMMddHHmm";
+        break;
+      default:
+        throw new ParseException("Not support table frequency: " + frequency);
+    }
+
+    long startTimestamp = CommonUtils.convertStringToTimestamp(startTime, timeFormat);
+    long endTimestamp = CommonUtils.convertStringToTimestamp(startTime, timeFormat);
+    return (endTimestamp - startTimestamp) / 1000 / 60 + 60;
+  }
+
+  private static String parseEngine(QueryPlan queryPlan) throws ParseException {
+    switch (queryPlan.getType()) {
+      case "raw":
+        // TODO support analysis raw sql complexity and choose the right engine
+        return "spark-sql";
+      case "compound":
+        try {
+          QueryPlan.CompoundQuery query = QueryPlan.CompoundQuery.fromJson(queryPlan.getQuery());
+          try {
+            TableInfoDao dao = new TableInfoDao(pool);
+            TableInfo tableInfo = dao.getTableInfoByName(query.getTableName());
+            if (tableInfo != null) {
+              long timeIntervalMinutes = getTimeIntervalMinutes(
+                  query.getTimeRange().getStartTime(),
+                  query.getTimeRange().getEndTime(),
+                  tableInfo.getFrequency());
+              if (query.getTableName().startsWith("custom.") && timeIntervalMinutes <= 1440) {
+                return "presto";
+              }
+            }
+          } catch (ConnectionPoolException | SQLException e) {
+            // ignore
+          }
+          return "spark-sql";
+        } catch (IOException e) {
+          throw new ParseException("Failde to parse query: " + queryPlan.getQuery());
+        }
+      default:
+        throw new ParseException("Not support query type: " + queryPlan.getType());
+    }
   }
 
   private static String parseSQL(QueryPlan queryPlan) throws ParseException {

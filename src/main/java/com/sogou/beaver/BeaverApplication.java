@@ -2,6 +2,7 @@ package com.sogou.beaver;
 
 import com.sogou.beaver.core.collector.FileOutputCollector;
 import com.sogou.beaver.core.execution.JobExecuteController;
+import com.sogou.beaver.core.plan.QueryPlanParser;
 import com.sogou.beaver.dao.*;
 import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.resources.*;
@@ -30,6 +31,8 @@ public class BeaverApplication extends Application<BeaverConfiguration> {
     FieldInfoDao fieldInfoDao = new FieldInfoDao(mysqlConnectionPool);
     EnumInfoDao enumInfoDao = new EnumInfoDao(mysqlConnectionPool);
     MethodInfoDao methodInfoDao = new MethodInfoDao(mysqlConnectionPool);
+    // init QueryPlanParser mysql connection pool
+    QueryPlanParser.setJDBCConnectionPool(mysqlConnectionPool);
 
     // start presto connection pool
     Properties info = new Properties();

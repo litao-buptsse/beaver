@@ -3,6 +3,7 @@ package com.sogou.beaver.core.execution;
 import com.sogou.beaver.core.engine.EngineExecutionException;
 import com.sogou.beaver.core.engine.PrestoEngine;
 import com.sogou.beaver.core.engine.SQLEngine;
+import com.sogou.beaver.core.engine.SparkSQLEngine;
 import com.sogou.beaver.core.plan.ExecutionPlan;
 import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.ConnectionPoolException;
@@ -41,38 +42,54 @@ public class JobExecuteController implements Runnable {
     this.prestoConnectionPool = prestoConnectionPool;
   }
 
+  private SQLEngine getSQLEngine(String name, long jobId) {
+    switch (name) {
+      case "presto":
+        return new PrestoEngine(prestoConnectionPool, jobId);
+      case "spark-sql":
+        return new SparkSQLEngine(jobId);
+      default:
+        return null;
+    }
+  }
+
   private class Worker implements Runnable {
+    private void runJob(Job job) {
+      String state = "FAIL";
+
+      try {
+        ExecutionPlan plan = ExecutionPlan.fromJson(job.getExecutionPlan());
+        SQLEngine engine = getSQLEngine(plan.getEngine(), job.getId());
+        if (engine != null) {
+          try {
+            if (engine.execute(plan.getSql())) {
+              state = "SUCC";
+            }
+          } catch (EngineExecutionException e) {
+            LOG.error("Failed to execute sql: " + plan.getSql(), e);
+          }
+        } else {
+          LOG.error("Not supported engine: " + plan.getEngine());
+        }
+      } catch (IOException e) {
+        LOG.error("Failed to parse executionPlan: " + job.getExecutionPlan(), e);
+      }
+
+      job.setState(state);
+      job.setEndTime(CommonUtils.now());
+      try {
+        dao.updateJobById(job, job.getId());
+      } catch (ConnectionPoolException | SQLException e) {
+        LOG.error("Failed to update job state: " + job.getId());
+      }
+    }
+
     @Override
     public void run() {
       while (isRunning && !Thread.currentThread().isInterrupted()) {
         try {
           Job job = jobQueue.take();
-          String state = "FAIL";
-          try {
-            ExecutionPlan plan = ExecutionPlan.fromJson(job.getExecutionPlan());
-            switch (plan.getEngine()) {
-              case "presto":
-                SQLEngine engine = new PrestoEngine(prestoConnectionPool, job.getId());
-                try {
-                  if (engine.execute(plan.getSql())) {
-                    state = "SUCC";
-                  }
-                } catch (EngineExecutionException e) {
-                  LOG.error("Failed to execute sql: " + plan.getSql(), e);
-                }
-              default:
-                LOG.error("Not supported engine: " + plan.getEngine());
-            }
-          } catch (IOException e) {
-            LOG.error("Failed to parse executionPlan: " + job.getExecutionPlan(), e);
-          }
-          job.setState(state);
-          job.setEndTime(CommonUtils.now());
-          try {
-            dao.updateJobById(job, job.getId());
-          } catch (ConnectionPoolException | SQLException e) {
-            LOG.error("Failed to update job state: " + job.getId());
-          }
+          runJob(job);
         } catch (InterruptedException e) {
           LOG.warn("interrupted", e);
           Thread.currentThread().interrupt();

@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Enumeration;
 import java.util.stream.Collectors;
@@ -23,6 +24,11 @@ public class CommonUtils {
 
   public static String now() {
     return LocalDateTime.now().format(DateTimeFormatter.ofPattern(TIME_FORMAT));
+  }
+
+  public static long convertStringToTimestamp(String str, String format) {
+    return LocalDateTime.parse(str, DateTimeFormatter.ofPattern(format))
+        .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
   }
 
   public static String ip() {
