@@ -32,8 +32,8 @@ public class JobResources {
   @Consumes(MediaType.APPLICATION_JSON)
   public void submitJob(Job job)
       throws ConnectionPoolException, SQLException, IOException, ParseException {
-    QueryPlan queryTerm = QueryPlan.fromJson(job.getQueryPlan());
-    ExecutionPlan executionPlan = QueryPlanParser.parse(queryTerm);
+    QueryPlan queryPlan = QueryPlan.fromJson(job.getQueryPlan());
+    ExecutionPlan executionPlan = QueryPlanParser.parse(queryPlan);
     job.setExecutionPlan(executionPlan.toJson());
     dao.createJob(job);
   }
