@@ -28,7 +28,7 @@ public class SparkSQLEngine implements SQLEngine {
   public boolean execute(String sql, Map<String, String> info) throws EngineExecutionException {
     String command = String.format(
         "echo \"%s\" | bin/spark_sql_engine.sh %s %s >logs/jobs/%s.log 2>&1",
-        sql, jobId, jobId, getSparkExecutorNum(info));
+        sql, jobId, getSparkExecutorNum(info), jobId);
     ProcessBuilder builder = new ProcessBuilder("bin/runner.py", command);
     Process process = null;
     try {
