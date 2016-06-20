@@ -3,12 +3,16 @@
 dir=`dirname $0`
 dir=`cd $dir/..; pwd`
 
-if [ $# -ne 1 ]; then
-  echo "usage: $0 <jobId>"
+if [ $# -lt 1 ]; then
+  echo "usage: $0 <jobId> [executor num]"
   exit 1
 fi
 
 jobId=$1
+executorNum=2
+if [ $# -ge 2 ]; then
+  executorNum=$2
+fi
 
 hdfsRoot=beaver/output
 hdfsOutput=$hdfsRoot/$jobId
@@ -20,7 +24,11 @@ hadoop fs -rm -r $hdfsOutput
 
 # TODO support dynamic pass the spark config
 cat - | spark-submit \
-  --master "local[*]" \
+  --master yarn-client \
+  --driver-memory 1G \
+  --conf spark.yarn.am.memory=1G \
+  --executor-memory 2G \
+  --num-executors $executorNum \
   --class com.sogou.spark.sql.SparkSQLCollector \
   $dir/bin/spark-sql-collector $hdfsOutput
 
