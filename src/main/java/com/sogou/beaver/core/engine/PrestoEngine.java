@@ -8,6 +8,7 @@ import com.sogou.beaver.db.JDBCConnectionPool;
 import java.io.IOException;
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Tao Li on 2016/6/1.
@@ -22,7 +23,8 @@ public class PrestoEngine extends AbstractJDBCEngine {
   }
 
   @Override
-  public boolean doExecute(String sql, Connection conn, RelationOutputCollector collector)
+  public boolean doExecute(String sql, Map<String, String> info,
+                           Connection conn, RelationOutputCollector collector)
       throws EngineExecutionException {
     try (Statement stmt = conn.createStatement()) {
       try (ResultSet rs = stmt.executeQuery(sql)) {

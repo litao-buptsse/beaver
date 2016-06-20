@@ -13,6 +13,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Tao Li on 2016/6/6.
@@ -21,13 +22,13 @@ public abstract class AbstractJDBCEngine extends AbstractSQLEngine {
   private final Logger LOG = LoggerFactory.getLogger(AbstractJDBCEngine.class);
 
   @Override
-  public boolean doExecute(String sql, RelationOutputCollector collector)
+  public boolean doExecute(String sql, Map<String, String> info, RelationOutputCollector collector)
       throws EngineExecutionException {
     JDBCConnectionPool pool = getJDBCConnectionPool();
     Connection conn = null;
     try {
       conn = pool.getConnection();
-      return doExecute(sql, conn, collector);
+      return doExecute(sql, info, conn, collector);
     } catch (ConnectionPoolException e) {
       throw new EngineExecutionException("Failed to get connection", e);
     } finally {
@@ -39,7 +40,8 @@ public abstract class AbstractJDBCEngine extends AbstractSQLEngine {
     }
   }
 
-  public abstract boolean doExecute(String sql, Connection conn, RelationOutputCollector collector)
+  public abstract boolean doExecute(String sql, Map<String, String> info,
+                                    Connection conn, RelationOutputCollector collector)
       throws EngineExecutionException;
 
   public abstract JDBCConnectionPool getJDBCConnectionPool();

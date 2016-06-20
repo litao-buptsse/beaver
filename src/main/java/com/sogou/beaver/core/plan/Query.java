@@ -1,12 +1,14 @@
 package com.sogou.beaver.core.plan;
 
-import com.sogou.beaver.db.JDBCConnectionPool;
+import java.util.Map;
 
 /**
  * Created by Tao Li on 6/19/16.
  */
 public interface Query {
-  String parseEngine(JDBCConnectionPool pool);
+  String parseEngine();
 
-  String parseSQL(JDBCConnectionPool pool);
+  String parseSQL();
+
+  Map<String, String> parseInfo();
 }

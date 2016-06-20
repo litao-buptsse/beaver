@@ -26,7 +26,7 @@ public class QueryPlanParser {
           query = RawQuery.fromJson(queryPlan.getQuery());
           break;
         case "compound":
-          query = CompoundQuery.fromJson(queryPlan.getQuery());
+          query = CompoundQuery.fromJson(queryPlan.getQuery(), pool);
           break;
         default:
           throw new ParseException("Not support query type: " + queryPlan.getType());
@@ -35,6 +35,6 @@ public class QueryPlanParser {
       throw new ParseException("Fail to parse query plan: " + queryPlan.getQuery());
     }
 
-    return new ExecutionPlan(query.parseEngine(pool), query.parseSQL(pool));
+    return new ExecutionPlan(query.parseEngine(), query.parseSQL(), query.parseInfo());
   }
 }

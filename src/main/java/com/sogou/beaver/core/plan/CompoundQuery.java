@@ -1,5 +1,6 @@
 package com.sogou.beaver.core.plan;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sogou.beaver.dao.TableInfoDao;
@@ -10,7 +11,9 @@ import com.sogou.beaver.util.CommonUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,6 +26,8 @@ public class CompoundQuery implements Query {
   private List<Bucket> buckets;
   private List<Filter> filters;
   private TimeRange timeRange;
+
+  private JDBCConnectionPool pool;
 
   static class Metric {
     private String method;
@@ -173,6 +178,7 @@ public class CompoundQuery implements Query {
     this.timeRange = timeRange;
   }
 
+  @JsonProperty
   public String getTableName() {
     return tableName;
   }
@@ -181,6 +187,7 @@ public class CompoundQuery implements Query {
     this.tableName = tableName;
   }
 
+  @JsonProperty
   public List<Metric> getMetrics() {
     return metrics;
   }
@@ -189,6 +196,7 @@ public class CompoundQuery implements Query {
     this.metrics = metrics;
   }
 
+  @JsonProperty
   public List<Bucket> getBuckets() {
     return buckets;
   }
@@ -197,6 +205,7 @@ public class CompoundQuery implements Query {
     this.buckets = buckets;
   }
 
+  @JsonProperty
   public List<Filter> getFilters() {
     return filters;
   }
@@ -205,6 +214,7 @@ public class CompoundQuery implements Query {
     this.filters = filters;
   }
 
+  @JsonProperty
   public TimeRange getTimeRange() {
     return timeRange;
   }
@@ -213,8 +223,22 @@ public class CompoundQuery implements Query {
     this.timeRange = timeRange;
   }
 
+  public JDBCConnectionPool getConnectionPool() {
+    return pool;
+  }
+
+  public void setConnectionPool(JDBCConnectionPool pool) {
+    this.pool = pool;
+  }
+
   public static CompoundQuery fromJson(String json) throws IOException {
-    return new ObjectMapper().readValue(json.getBytes(), CompoundQuery.class);
+    return fromJson(json, null);
+  }
+
+  public static CompoundQuery fromJson(String json, JDBCConnectionPool pool) throws IOException {
+    CompoundQuery query = new ObjectMapper().readValue(json.getBytes(), CompoundQuery.class);
+    query.setConnectionPool(pool);
+    return query;
   }
 
   public String toJson() throws JsonProcessingException {
@@ -243,7 +267,7 @@ public class CompoundQuery implements Query {
   }
 
   @Override
-  public String parseEngine(JDBCConnectionPool pool) {
+  public String parseEngine() {
     try {
       TableInfoDao dao = new TableInfoDao(pool);
       TableInfo tableInfo = dao.getTableInfoByName(tableName);
@@ -265,7 +289,7 @@ public class CompoundQuery implements Query {
 
   // TODO support more complex compound query
   @Override
-  public String parseSQL(JDBCConnectionPool pool) {
+  public String parseSQL() {
     String metricSQL = metrics.stream()
         .map(metric -> String.format("%s AS %s",
             parseMetric(metric.getMethod(), metric.getField()), metric.getAlias()))
@@ -289,6 +313,27 @@ public class CompoundQuery implements Query {
     String sql = String.format("SELECT %s, %s FROM %s WHERE %s AND %s GROUP BY %s",
         bucketMetricSQL, metricSQL, tableName, timeRangeSQL, filterSQL, bucketSQL);
     return sql;
+  }
+
+  @Override
+  public Map<String, String> parseInfo() {
+    Map<String, String> info = new HashMap<>();
+    double SPARK_EXECUTOR_NUM_FACTOR = 1.5;
+    try {
+      TableInfoDao dao = new TableInfoDao(pool);
+      TableInfo tableInfo = dao.getTableInfoByName(tableName);
+      if (tableInfo != null) {
+        long timeIntervalMinutes = getTimeIntervalMinutes(
+            timeRange.getStartTime(),
+            timeRange.getEndTime(),
+            tableInfo.getFrequency());
+        int sparkExecutorNum = (int) (timeIntervalMinutes / 60 * SPARK_EXECUTOR_NUM_FACTOR);
+        info.put("spark.executor.instances", String.valueOf(sparkExecutorNum));
+      }
+    } catch (ConnectionPoolException | SQLException e) {
+      // ignore
+    }
+    return info;
   }
 
   private static String parseMetric(String method, String field) {

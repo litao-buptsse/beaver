@@ -62,7 +62,7 @@ public class JobExecuteController implements Runnable {
         SQLEngine engine = getSQLEngine(plan.getEngine(), job.getId());
         if (engine != null) {
           try {
-            if (engine.execute(plan.getSql())) {
+            if (engine.execute(plan.getSql(), plan.getInfo())) {
               state = "SUCC";
             }
           } catch (EngineExecutionException e) {
