@@ -1,11 +1,11 @@
 package com.sogou.beaver.resources;
 
+import com.sogou.beaver.Config;
 import com.sogou.beaver.core.collector.FileOutputCollector;
 import com.sogou.beaver.core.plan.ExecutionPlan;
 import com.sogou.beaver.core.plan.ParseException;
 import com.sogou.beaver.core.plan.QueryPlan;
 import com.sogou.beaver.core.plan.QueryPlanParser;
-import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.Job;
 import com.sogou.beaver.util.CommonUtils;
@@ -22,12 +22,6 @@ import java.sql.SQLException;
  */
 @Path("/jobs")
 public class JobResources {
-  private final JobDao dao;
-
-  public JobResources(JobDao dao) {
-    this.dao = dao;
-  }
-
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   public void submitJob(Job job)
@@ -35,7 +29,7 @@ public class JobResources {
     QueryPlan queryPlan = QueryPlan.fromJson(job.getQueryPlan());
     ExecutionPlan executionPlan = QueryPlanParser.parse(queryPlan);
     job.setExecutionPlan(executionPlan.toJson());
-    dao.createJob(job);
+    Config.JOB_DAO.createJob(job);
   }
 
   @GET
@@ -45,14 +39,14 @@ public class JobResources {
                         @DefaultValue("10") @QueryParam("length") int length,
                         @QueryParam("callback") String callback)
       throws ConnectionPoolException, SQLException {
-    return CommonUtils.formatJSONPObject(callback, dao.getJobsByUserId(userId, start, length));
+    return CommonUtils.formatJSONPObject(callback,
+        Config.JOB_DAO.getJobsByUserId(userId, start, length));
   }
 
   @GET
   @Path("/download/{id}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   public Response download(@PathParam("id") long id) throws IOException {
-    String file = String.format("%s/%s.data", FileOutputCollector.getOutputRootDir(), id);
     String downloadFile = String.format("%s.csv", id);
     return Response.ok(FileOutputCollector.getStreamingOutput(id))
         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + downloadFile)

@@ -1,6 +1,6 @@
 package com.sogou.beaver.resources;
 
-import com.sogou.beaver.dao.EnumInfoDao;
+import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.util.CommonUtils;
 
@@ -16,17 +16,12 @@ import java.sql.SQLException;
  */
 @Path("/enumInfos")
 public class EnumInfoResources {
-  private final EnumInfoDao dao;
-
-  public EnumInfoResources(EnumInfoDao dao) {
-    this.dao = dao;
-  }
-
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Object getEnumInfos(@QueryParam("fieldId") long fieldId,
                              @QueryParam("callback") String callback)
       throws ConnectionPoolException, SQLException {
-    return CommonUtils.formatJSONPObject(callback, dao.getEnumInfosByFieldId(fieldId));
+    return CommonUtils.formatJSONPObject(callback,
+        Config.ENUM_INFO_DAO.getEnumInfosByFieldId(fieldId));
   }
 }

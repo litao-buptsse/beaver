@@ -1,12 +1,10 @@
 package com.sogou.beaver.dao;
 
+import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
-import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.db.JDBCUtils;
 import com.sogou.beaver.model.Job;
 import com.sogou.beaver.util.CommonUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,17 +19,10 @@ import java.util.stream.LongStream;
  * Created by Tao Li on 2016/6/1.
  */
 public class JobDao {
-  private final Logger LOG = LoggerFactory.getLogger(JobDao.class);
-
   private final static String TABLE_NAME = "jobs";
-  private final JDBCConnectionPool pool;
-
-  public JobDao(JDBCConnectionPool pool) {
-    this.pool = pool;
-  }
 
   public void createJob(Job job) throws ConnectionPoolException, SQLException {
-    JDBCUtils.execute(pool, String.format(
+    JDBCUtils.execute(Config.POOL, String.format(
         "INSERT INTO %s (userId, state, startTime, queryPlan, executionPlan) " +
             "VALUES(%s, 'WAIT', %s, %s, %s)", TABLE_NAME,
         CommonUtils.formatSQLValue(job.getUserId()),
@@ -41,7 +32,7 @@ public class JobDao {
   }
 
   private void updateJob(Job job, String whereClause) throws ConnectionPoolException, SQLException {
-    JDBCUtils.execute(pool, String.format(
+    JDBCUtils.execute(Config.POOL, String.format(
         "UPDATE %s SET userId=%s, state=%s, startTime=%s, endTime=%s, " +
             "queryPlan=%s, executionPlan=%s, host=%s %s", TABLE_NAME,
         CommonUtils.formatSQLValue(job.getUserId()),
@@ -65,7 +56,7 @@ public class JobDao {
 
   public void updateJobsStateAndHostByIds(String state, String host, long[] ids)
       throws ConnectionPoolException, SQLException {
-    JDBCUtils.execute(pool, String.format(
+    JDBCUtils.execute(Config.POOL, String.format(
         "UPDATE %s SET state=%s, host=%s WHERE id in (%s)", TABLE_NAME,
         CommonUtils.formatSQLValue(state),
         CommonUtils.formatSQLValue(host),
@@ -74,7 +65,7 @@ public class JobDao {
 
   private List<Job> getJobs(String whereClause) throws ConnectionPoolException, SQLException {
     String sql = String.format("SELECT * FROM %s %s", TABLE_NAME, whereClause);
-    Connection conn = pool.getConnection();
+    Connection conn = Config.POOL.getConnection();
     try {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
         try (ResultSet rs = stmt.executeQuery()) {
@@ -95,7 +86,7 @@ public class JobDao {
         }
       }
     } finally {
-      pool.releaseConnection(conn);
+      Config.POOL.releaseConnection(conn);
     }
   }
 

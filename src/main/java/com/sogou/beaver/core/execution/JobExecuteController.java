@@ -1,13 +1,12 @@
 package com.sogou.beaver.core.execution;
 
+import com.sogou.beaver.Config;
 import com.sogou.beaver.core.engine.EngineExecutionException;
 import com.sogou.beaver.core.engine.PrestoEngine;
 import com.sogou.beaver.core.engine.SQLEngine;
 import com.sogou.beaver.core.engine.SparkSQLEngine;
 import com.sogou.beaver.core.plan.ExecutionPlan;
-import com.sogou.beaver.dao.JobDao;
 import com.sogou.beaver.db.ConnectionPoolException;
-import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.model.Job;
 import com.sogou.beaver.util.CommonUtils;
 import org.slf4j.Logger;
@@ -25,27 +24,29 @@ import java.util.stream.IntStream;
 public class JobExecuteController implements Runnable {
   private final Logger LOG = LoggerFactory.getLogger(JobExecuteController.class);
 
-  private final JobDao dao;
-  private final JDBCConnectionPool prestoConnectionPool;
   private volatile boolean isRunning = false;
-  private final static String IP = CommonUtils.ip();
   private final static long CHECK_INTERVAL = 3;
   private final static int CHECK_JOB_BATCH = 20;
   private final static long PREEMPT_INTERVAL = 1;
-  private final static int JOB_QUEUE_SIZE = 20;
-  private final static int WORKER_SIZE = 10;
-  private BlockingQueue<Job> jobQueue = new ArrayBlockingQueue<>(JOB_QUEUE_SIZE, true);
-  private ExecutorService workerPool = Executors.newFixedThreadPool(WORKER_SIZE);
 
-  public JobExecuteController(JobDao dao, JDBCConnectionPool prestoConnectionPool) {
-    this.dao = dao;
-    this.prestoConnectionPool = prestoConnectionPool;
+  private int jobQueueSize;
+  private int workerNum;
+  private BlockingQueue<Job> jobQueue;
+  private ExecutorService workerPool;
+  private final String host;
+
+  public JobExecuteController(int jobQueueSize, int workerNum, String host) {
+    this.jobQueueSize = jobQueueSize;
+    this.workerNum = workerNum;
+    this.host = host;
+    jobQueue = new ArrayBlockingQueue<>(jobQueueSize, true);
+    workerPool = Executors.newFixedThreadPool(workerNum);
   }
 
   private SQLEngine getSQLEngine(String name, long jobId) {
     switch (name) {
       case "presto":
-        return new PrestoEngine(prestoConnectionPool, jobId);
+        return new PrestoEngine(Config.PRESTO_POOL, jobId);
       case "spark-sql":
         return new SparkSQLEngine(jobId);
       default:
@@ -78,7 +79,7 @@ public class JobExecuteController implements Runnable {
       job.setState(state);
       job.setEndTime(CommonUtils.now());
       try {
-        dao.updateJobById(job, job.getId());
+        Config.JOB_DAO.updateJobById(job, job.getId());
       } catch (ConnectionPoolException | SQLException e) {
         LOG.error("Failed to update job state: " + job.getId());
       }
@@ -102,7 +103,7 @@ public class JobExecuteController implements Runnable {
   public void run() {
     isRunning = true;
 
-    IntStream.iterate(0, n -> n + 1).limit(WORKER_SIZE).forEach(i -> {
+    IntStream.iterate(0, n -> n + 1).limit(workerNum).forEach(i -> {
       workerPool.submit(new Worker());
     });
 
@@ -115,14 +116,14 @@ public class JobExecuteController implements Runnable {
     while (isRunning && !Thread.currentThread().isInterrupted()) {
       List<Job> jobs = null;
       try {
-        jobs = dao.getJobsByState("WAIT", CHECK_JOB_BATCH);
+        jobs = Config.JOB_DAO.getJobsByState("WAIT", CHECK_JOB_BATCH);
       } catch (ConnectionPoolException | SQLException e) {
         LOG.error("Failed to get WAIT jobs", e);
       }
 
       if (jobs != null) {
         jobs.stream().forEach(job -> {
-          if (jobQueue.size() < JOB_QUEUE_SIZE && preemptJob(job)) {
+          if (jobQueue.size() < jobQueueSize && preemptJob(job)) {
             jobQueue.add(job);
           }
         });
@@ -138,15 +139,15 @@ public class JobExecuteController implements Runnable {
   }
 
   private void cleanZombieJobs() throws ConnectionPoolException, SQLException {
-    List<Job> lockJobs = dao.getJobsByStateAndHost("LOCK", IP);
+    List<Job> lockJobs = Config.JOB_DAO.getJobsByStateAndHost("LOCK", host);
     if (lockJobs.size() > 0) {
-      dao.updateJobsStateAndHostByIds(
+      Config.JOB_DAO.updateJobsStateAndHostByIds(
           "WAIT", null, lockJobs.stream().mapToLong(job -> job.getId()).toArray());
     }
-    List<Job> runJobs = dao.getJobsByStateAndHost("RUN", IP);
+    List<Job> runJobs = Config.JOB_DAO.getJobsByStateAndHost("RUN", host);
     if (runJobs.size() > 0) {
-      dao.updateJobsStateAndHostByIds(
-          "FAIL", IP, runJobs.stream().mapToLong(job -> job.getId()).toArray());
+      Config.JOB_DAO.updateJobsStateAndHostByIds(
+          "FAIL", host, runJobs.stream().mapToLong(job -> job.getId()).toArray());
     }
   }
 
@@ -155,8 +156,8 @@ public class JobExecuteController implements Runnable {
       boolean needToRollback = false;
 
       job.setState("LOCK");
-      job.setHost(IP);
-      dao.updateJobById(job, job.getId());
+      job.setHost(host);
+      Config.JOB_DAO.updateJobById(job, job.getId());
 
       try {
         TimeUnit.SECONDS.sleep(PREEMPT_INTERVAL);
@@ -167,10 +168,10 @@ public class JobExecuteController implements Runnable {
       }
 
       try {
-        job = dao.getJobById(job.getId());
-        if (job.getState().equals("LOCK") && job.getHost().equals(IP)) {
+        job = Config.JOB_DAO.getJobById(job.getId());
+        if (job.getState().equals("LOCK") && job.getHost().equals(host)) {
           job.setState("RUN");
-          dao.updateJobById(job, job.getId());
+          Config.JOB_DAO.updateJobById(job, job.getId());
           return true;
         }
       } catch (ConnectionPoolException | SQLException e) {
@@ -181,7 +182,7 @@ public class JobExecuteController implements Runnable {
       if (needToRollback) {
         job.setState("WAIT");
         job.setHost(null);
-        dao.updateJobByIdAndStateAndHost(job, job.getId(), "LOCK", IP);
+        Config.JOB_DAO.updateJobByIdAndStateAndHost(job, job.getId(), "LOCK", host);
       }
     } catch (ConnectionPoolException | SQLException e) {
       LOG.error("Failed to preempt job: " + job.getId(), e);

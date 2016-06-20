@@ -1,6 +1,5 @@
 package com.sogou.beaver.core.plan;
 
-import com.sogou.beaver.db.JDBCConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,12 +11,6 @@ import java.io.IOException;
 public class QueryPlanParser {
   private final static Logger LOG = LoggerFactory.getLogger(QueryPlanParser.class);
 
-  private static JDBCConnectionPool pool;
-
-  public static void setJDBCConnectionPool(JDBCConnectionPool pool) {
-    QueryPlanParser.pool = pool;
-  }
-
   public static ExecutionPlan parse(QueryPlan queryPlan) throws ParseException {
     Query query;
     try {
@@ -26,7 +19,7 @@ public class QueryPlanParser {
           query = RawQuery.fromJson(queryPlan.getQuery());
           break;
         case "compound":
-          query = CompoundQuery.fromJson(queryPlan.getQuery(), pool);
+          query = CompoundQuery.fromJson(queryPlan.getQuery());
           break;
         default:
           throw new ParseException("Not support query type: " + queryPlan.getType());

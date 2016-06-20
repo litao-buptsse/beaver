@@ -1,12 +1,9 @@
 package com.sogou.beaver.dao;
 
+import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
-import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.model.FieldInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,19 +15,12 @@ import java.util.List;
  * Created by Tao Li on 6/11/16.
  */
 public class FieldInfoDao {
-  private final Logger LOG = LoggerFactory.getLogger(FieldInfoDao.class);
-
   private final static String TABLE_NAME = "dw_fields";
-  private final JDBCConnectionPool pool;
-
-  public FieldInfoDao(JDBCConnectionPool pool) {
-    this.pool = pool;
-  }
 
   public List<FieldInfo> getFieldInfosByTableId(long tableId)
       throws ConnectionPoolException, SQLException {
     String sql = String.format("SELECT * FROM %s WHERE tableId=%s", TABLE_NAME, tableId);
-    Connection conn = pool.getConnection();
+    Connection conn = Config.POOL.getConnection();
     try {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
         try (ResultSet rs = stmt.executeQuery()) {
@@ -51,7 +41,7 @@ public class FieldInfoDao {
         }
       }
     } finally {
-      pool.releaseConnection(conn);
+      Config.POOL.releaseConnection(conn);
     }
   }
 }

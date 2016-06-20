@@ -3,9 +3,8 @@ package com.sogou.beaver.core.plan;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sogou.beaver.dao.TableInfoDao;
+import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
-import com.sogou.beaver.db.JDBCConnectionPool;
 import com.sogou.beaver.model.TableInfo;
 import com.sogou.beaver.util.CommonUtils;
 
@@ -26,8 +25,6 @@ public class CompoundQuery implements Query {
   private List<Bucket> buckets;
   private List<Filter> filters;
   private TimeRange timeRange;
-
-  private JDBCConnectionPool pool;
 
   static class Metric {
     private String method;
@@ -223,22 +220,8 @@ public class CompoundQuery implements Query {
     this.timeRange = timeRange;
   }
 
-  public JDBCConnectionPool getConnectionPool() {
-    return pool;
-  }
-
-  public void setConnectionPool(JDBCConnectionPool pool) {
-    this.pool = pool;
-  }
-
   public static CompoundQuery fromJson(String json) throws IOException {
-    return fromJson(json, null);
-  }
-
-  public static CompoundQuery fromJson(String json, JDBCConnectionPool pool) throws IOException {
-    CompoundQuery query = new ObjectMapper().readValue(json.getBytes(), CompoundQuery.class);
-    query.setConnectionPool(pool);
-    return query;
+    return new ObjectMapper().readValue(json.getBytes(), CompoundQuery.class);
   }
 
   public String toJson() throws JsonProcessingException {
@@ -269,8 +252,7 @@ public class CompoundQuery implements Query {
   @Override
   public String parseEngine() {
     try {
-      TableInfoDao dao = new TableInfoDao(pool);
-      TableInfo tableInfo = dao.getTableInfoByName(tableName);
+      TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(tableName);
       if (tableInfo != null) {
         long timeIntervalMinutes = getTimeIntervalMinutes(
             timeRange.getStartTime(),
@@ -320,8 +302,7 @@ public class CompoundQuery implements Query {
     Map<String, String> info = new HashMap<>();
     double SPARK_EXECUTOR_NUM_FACTOR = 1.5;
     try {
-      TableInfoDao dao = new TableInfoDao(pool);
-      TableInfo tableInfo = dao.getTableInfoByName(tableName);
+      TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(tableName);
       if (tableInfo != null) {
         long timeIntervalMinutes = getTimeIntervalMinutes(
             timeRange.getStartTime(),

@@ -1,5 +1,6 @@
 package com.sogou.beaver.core.collector;
 
+import com.sogou.beaver.Config;
 import com.sogou.beaver.core.meta.ColumnMeta;
 import com.sogou.beaver.model.JobResult;
 import com.sogou.beaver.util.CommonUtils;
@@ -27,7 +28,6 @@ public class FileOutputCollector implements RelationOutputCollector {
   private final static String FIELD_SEPARATOR = "\001";
   private final static String RECORD_SEPARATOR = "\n";
   private final static Charset CHARSET = StandardCharsets.UTF_8;
-  private static String OUTPUT_ROOT_DIR = "data";
   private static String DATA_FILE_POSTFIX = ".data";
   private static String SCHEMA_FILE_POSTFIX = ".schema";
 
@@ -37,18 +37,18 @@ public class FileOutputCollector implements RelationOutputCollector {
 
   private static Path getOutputDir(long jobId) {
     return Paths.get(CommonUtils.formatPath(FILE_SEPARATOR,
-        OUTPUT_ROOT_DIR, String.valueOf(jobId)));
+        Config.FILE_OUTPUT_COLLECTOR_ROOT_DIR, String.valueOf(jobId)));
   }
 
   private static Path getDataFile(long jobId) {
     return Paths.get(CommonUtils.formatPath(FILE_SEPARATOR,
-        OUTPUT_ROOT_DIR, String.valueOf(jobId),
+        Config.FILE_OUTPUT_COLLECTOR_ROOT_DIR, String.valueOf(jobId),
         String.valueOf(jobId) + DATA_FILE_POSTFIX));
   }
 
   private static Path getSchemaFile(long jobId) {
     return Paths.get(CommonUtils.formatPath(FILE_SEPARATOR,
-        OUTPUT_ROOT_DIR, String.valueOf(jobId),
+        Config.FILE_OUTPUT_COLLECTOR_ROOT_DIR, String.valueOf(jobId),
         String.valueOf(jobId) + SCHEMA_FILE_POSTFIX));
   }
 
@@ -91,14 +91,6 @@ public class FileOutputCollector implements RelationOutputCollector {
   @Override
   public void close() throws IOException {
     dataFileWriter.close();
-  }
-
-  public static void setOutputRootDir(String outputRootDir) {
-    FileOutputCollector.OUTPUT_ROOT_DIR = outputRootDir;
-  }
-
-  public static String getOutputRootDir() {
-    return FileOutputCollector.OUTPUT_ROOT_DIR;
   }
 
   public static JobResult getJobResult(long jobId, int start, int length) throws IOException {

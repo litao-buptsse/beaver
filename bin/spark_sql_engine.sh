@@ -24,6 +24,7 @@ hadoop fs -rm -r $hdfsOutput
 
 # TODO support dynamic pass the spark config
 cat - | spark-submit \
+  --name beaver-$jobId \
   --master yarn-client \
   --driver-memory 1G \
   --conf spark.yarn.am.memory=1G \

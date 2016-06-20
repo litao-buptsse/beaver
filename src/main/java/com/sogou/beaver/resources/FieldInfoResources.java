@@ -1,6 +1,6 @@
 package com.sogou.beaver.resources;
 
-import com.sogou.beaver.dao.FieldInfoDao;
+import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.util.CommonUtils;
 
@@ -16,17 +16,12 @@ import java.sql.SQLException;
  */
 @Path("/fieldInfos")
 public class FieldInfoResources {
-  private final FieldInfoDao dao;
-
-  public FieldInfoResources(FieldInfoDao dao) {
-    this.dao = dao;
-  }
-
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Object getFieldInfos(@QueryParam("tableId") long tableId,
                               @QueryParam("callback") String callback)
       throws ConnectionPoolException, SQLException {
-    return CommonUtils.formatJSONPObject(callback, dao.getFieldInfosByTableId(tableId));
+    return CommonUtils.formatJSONPObject(callback,
+        Config.FIELD_INFO_DAO.getFieldInfosByTableId(tableId));
   }
 }

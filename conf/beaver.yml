@@ -22,27 +22,27 @@ logging:
       archivedFileCount: 5
       timeZone: Asia/Shanghai
 
-mysql:
-  connectionPool:
-    driverClass: com.mysql.jdbc.Driver
-    url: jdbc:mysql://db.beaver.rds.sogou/beaver?user=clouddev&password=clouddev123456&useUnicode=true&characterEncoding=utf8&autoReconnect=true
-    initConnectionNum: 3
-    minConnectionNum: 3
-    maxConnectionNum: 50
-    idleTimeout: 30000
-    idleQueueSize: 50
-    idleConnectionCloseThreadPoolSize: 10
+beaver:
+  fileOutputCollectorRootDir: data
+  jobQueueSize: 20
+  workerNum: 10
+
+beaverDB:
+  driverClass: com.mysql.jdbc.Driver
+  url: jdbc:mysql://db.beaver.rds.sogou/beaver?user=clouddev&password=clouddev123456&useUnicode=true&characterEncoding=utf8&autoReconnect=true
+  initConnectionNum: 3
+  minConnectionNum: 3
+  maxConnectionNum: 50
+  idleTimeout: 30000
+  idleQueueSize: 50
+  idleConnectionCloseThreadPoolSize: 10
 
 presto:
-  connectionPool:
-    driverClass: com.facebook.presto.jdbc.PrestoDriver
-    url: jdbc:presto://coordinator01.presto01.sjs.ted:8080/hive
-    initConnectionNum: 1
-    minConnectionNum: 1
-    maxConnectionNum: 10
-    idleTimeout: 30000
-    idleQueueSize: 10
-    idleConnectionCloseThreadPoolSize: 10
-
-outputCollector:
-  outputRootDir: data
+  driverClass: com.facebook.presto.jdbc.PrestoDriver
+  url: jdbc:presto://coordinator01.presto01.sjs.ted:8080/hive
+  initConnectionNum: 1
+  minConnectionNum: 1
+  maxConnectionNum: 10
+  idleTimeout: 30000
+  idleQueueSize: 10
+  idleConnectionCloseThreadPoolSize: 10
