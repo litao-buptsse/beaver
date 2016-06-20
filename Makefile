@@ -18,10 +18,10 @@ endif
 all: build
 
 clean:
-	cd ..; mvn clean; cd -
+	mvn clean
 
 build:
-	cd ..; mvn package; cd -
+	mvn package
 
 docker-build: build
 	mkdir -p .tmp .tmp/bin .tmp/conf .tmp/lib
