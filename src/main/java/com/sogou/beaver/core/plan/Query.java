@@ -6,9 +6,9 @@ import java.util.Map;
  * Created by Tao Li on 6/19/16.
  */
 public interface Query {
-  String parseEngine();
+  String parseEngine() throws ParseException;
 
-  String parseSQL();
+  String parseSQL() throws ParseException;
 
-  Map<String, String> parseInfo();
+  Map<String, String> parseInfo() throws ParseException;
 }

@@ -254,7 +254,7 @@ public class CompoundQuery implements Query {
   }
 
   @Override
-  public String parseEngine() {
+  public String parseEngine() throws ParseException {
     try {
       TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(tableName);
       if (tableInfo != null) {
@@ -273,17 +273,26 @@ public class CompoundQuery implements Query {
 
   // TODO support more complex compound query
   @Override
-  public String parseSQL() {
-    String metricSQL = metrics.stream()
-        .map(metric -> String.format("%s AS %s",
-            parseMetric(metric.getMethod(), metric.getField()), metric.getAlias()))
-        .collect(Collectors.joining(", "));
-
+  public String parseSQL() throws ParseException {
     String bucketMetricSQL = buckets.stream()
         .map(bucket -> String.format("%s AS %s",
             bucket.getField(),
             bucket.getAlias()))
         .collect(Collectors.joining(", "));
+
+    String metricSQL = metrics.stream()
+        .map(metric -> String.format("%s AS %s",
+            parseMetric(metric.getMethod(), metric.getField()), metric.getAlias()))
+        .collect(Collectors.joining(", "));
+    metricSQL = !metricSQL.equals("") && !bucketMetricSQL.equals("") ? ", " + metricSQL : metricSQL;
+
+    if (bucketMetricSQL.equals("") && metricSQL.equals("")) {
+      throw new ParseException("Nothing to select");
+    }
+
+    if (timeRange.getEndTime().compareTo(timeRange.getStartTime()) < 0) {
+      throw new ParseException("EndTime is less than startTime");
+    }
 
     String timeRangeSQL = String.format("logdate>=%s AND logdate<=%s",
         CommonUtils.formatSQLValue(timeRange.getStartTime()),
@@ -299,21 +308,34 @@ public class CompoundQuery implements Query {
     String bucketSQL = buckets.stream()
         .map(bucket -> bucket.getField())
         .collect(Collectors.joining(", "));
+    bucketSQL = !bucketSQL.equals("") ? "GROUP BY " + bucketSQL : "";
 
     String havingSQL = filters.stream()
         .filter(filter -> filter.getFilterType().equalsIgnoreCase(Config.FILTER_TYPE_HAVING))
+        .filter(filter -> filter.getField().indexOf(":") > 0)
         .map(filter -> parseFilter(filter.getMethod(),
             parseHavingField(filter.getField()), filter.getValue(), filter.getDataType()))
         .collect(Collectors.joining(" AND "));
     havingSQL = !havingSQL.equals("") ? "HAVING " + havingSQL : "";
 
-    String sql = String.format("SELECT %s, %s FROM %s WHERE %s %s GROUP BY %s %s",
-        bucketMetricSQL, metricSQL, tableName, timeRangeSQL, whereSQL, bucketSQL, havingSQL);
+    if (bucketSQL.equals("") && (!bucketMetricSQL.equals("") || !havingSQL.equals(""))) {
+      throw new ParseException("Can't call aggregate function when nothing to group by");
+    }
+
+    String orderBySQL = metrics.stream().map(metric -> metric.getAlias() + " DESC")
+        .collect(Collectors.joining(", "));
+    orderBySQL = !orderBySQL.equals("") ? "ORDER BY " + orderBySQL : "";
+
+    String limitSQL = "LIMIT " + Config.MAX_RESULT_RECORD_NUM;
+
+    String sql = String.format("SELECT %s %s FROM %s WHERE %s %s %s %s %s %s",
+        bucketMetricSQL, metricSQL, tableName, timeRangeSQL, whereSQL, bucketSQL, havingSQL,
+        orderBySQL, limitSQL);
     return sql;
   }
 
   @Override
-  public Map<String, String> parseInfo() {
+  public Map<String, String> parseInfo() throws ParseException {
     Map<String, String> info = new HashMap<>();
     if (parseEngine().equals(Config.SQL_ENGINE_SPARK_SQL)) {
       double SPARK_EXECUTOR_NUM_FACTOR = 1.5;

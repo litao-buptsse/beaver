@@ -70,6 +70,8 @@ public class Config extends Configuration {
   public static int JOB_QUEUE_SIZE;
   public static int WORKER_NUM;
   public static String HOST;
+  public static int MAX_RESULT_RECORD_NUM;
+
   public static JDBCConnectionPool POOL;
   public static JobDao JOB_DAO;
   public static TableInfoDao TABLE_INFO_DAO;
@@ -87,6 +89,7 @@ public class Config extends Configuration {
     JOB_QUEUE_SIZE = Integer.parseInt(beaverConf.getOrDefault("jobQueueSize", "20"));
     WORKER_NUM = Integer.parseInt(beaverConf.getOrDefault("workerNum", "10"));
     HOST = beaverConf.getOrDefault("host", CommonUtils.ip());
+    MAX_RESULT_RECORD_NUM = Integer.parseInt(beaverConf.getOrDefault("maxResultRecordNum", "10000"));
 
     // init db connection pool
     POOL = constructJDBCConnectionPool(beaverDBConf);
