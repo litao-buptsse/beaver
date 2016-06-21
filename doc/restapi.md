@@ -61,6 +61,8 @@
   ],
   filters: [
     {
+      fieldType: $fieldType,  // WHERE or HAVING
+      dataType: $dataType,
       field: $field,
       method: $method,
       value: $value
@@ -119,15 +121,14 @@
       id: $id,
       name: $name,
       description: $description,
-      types: $types
+      dataType: $dataType
     }
   ],
   filterMethods: [
     {
       id: $id,
       name: $name,
-      description: $description,
-      types: $types
+      description: $description
     }
   ]
 }
