@@ -123,7 +123,7 @@ public class CommonUtils {
   public static Response sendHttpRequest(String method, String uri, String responseType) {
     Client client = ClientBuilder.newClient(new ClientConfig()).
         property(ClientProperties.CONNECT_TIMEOUT, 1000).
-        property(ClientProperties.READ_TIMEOUT, 3000);
+        property(ClientProperties.READ_TIMEOUT, 1000);
     WebTarget target = client.target(uri);
     Invocation.Builder invocationBuilder = target.request(responseType);
     return invocationBuilder.method(method);
