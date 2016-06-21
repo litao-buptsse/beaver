@@ -10,5 +10,5 @@ DATA_DIR=/search/ted/beaver/data
 docker run -d --net=host \
   -v /etc/localtime:/etc/localtime \
   -v $LOG_DIR:/search/beaver/logs \
-  -v $LOG_DIR:/search/beaver/data \
+  -v $DATA_DIR:/search/beaver/data \
   $REGISTRY/$IMAGE:$VERSION
