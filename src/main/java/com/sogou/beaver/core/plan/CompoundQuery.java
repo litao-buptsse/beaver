@@ -243,13 +243,13 @@ public class CompoundQuery implements Query {
             tableInfo.getFrequency());
         if (tableName.startsWith("custom.")
             && timeIntervalMinutes != -1 && timeIntervalMinutes <= 1440) {
-          return "presto";
+          return Config.SQL_ENGINE_PRESTO;
         }
       }
     } catch (ConnectionPoolException | SQLException e) {
       // ignore
     }
-    return "spark-sql";
+    return Config.SQL_ENGINE_SPARK_SQL;
   }
 
   // TODO support more complex compound query

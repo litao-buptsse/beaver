@@ -24,28 +24,24 @@
   state: $state,
   startTime: $startTime,
   endTime: $endTime,
+  queryType: $queryType,  // needed, RAW or COMPOUND
   queryPlan: $queryPlan,  // needed
   executionPlan: $executionPlan,
   host: $host
 }
 ```
 
-#### QueryPlan Field Format (JSON)
+##### Raw Query
 
 ```
 {
-  type: $type // raw, compound
-  query: $query
+  engine: $engine, // PRESTO or SPARK-SQL
+  sql: $sql,
+  info: { $key: $value }  // optional
 }
 ```
 
-##### Raw Query Field
-
-```
-sql
-```
-
-##### Compound Query Filed (JSON)
+##### Compound Query
 
 ```
 {

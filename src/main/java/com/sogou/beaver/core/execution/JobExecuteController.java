@@ -45,9 +45,9 @@ public class JobExecuteController implements Runnable {
 
   private SQLEngine getSQLEngine(String name, long jobId) {
     switch (name) {
-      case "presto":
+      case Config.SQL_ENGINE_PRESTO:
         return new PrestoEngine(Config.PRESTO_POOL, jobId);
-      case "spark-sql":
+      case Config.SQL_ENGINE_SPARK_SQL:
         return new SparkSQLEngine(jobId);
       default:
         return null;
