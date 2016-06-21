@@ -6,6 +6,7 @@ import com.sogou.beaver.model.TableInfo;
 import com.sogou.beaver.util.CommonUtils;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,8 @@ public class CompoundQuery implements Query {
   }
 
   static class Filter {
+    private String filterType;
+    private String dataType;
     private String method;
     private String field;
     private String value;
@@ -98,10 +101,28 @@ public class CompoundQuery implements Query {
     public Filter() {
     }
 
-    public Filter(String method, String field, String value) {
+    public Filter(String filterType, String dataType, String method, String field, String value) {
+      this.filterType = filterType;
+      this.dataType = dataType;
       this.method = method;
       this.field = field;
       this.value = value;
+    }
+
+    public String getFilterType() {
+      return filterType;
+    }
+
+    public void setFilterType(String filterType) {
+      this.filterType = filterType;
+    }
+
+    public String getDataType() {
+      return dataType;
+    }
+
+    public void setDataType(String dataType) {
+      this.dataType = dataType;
     }
 
     public String getMethod() {
@@ -238,9 +259,7 @@ public class CompoundQuery implements Query {
       TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(tableName);
       if (tableInfo != null) {
         long timeIntervalMinutes = getTimeIntervalMinutes(
-            timeRange.getStartTime(),
-            timeRange.getEndTime(),
-            tableInfo.getFrequency());
+            timeRange.getStartTime(), timeRange.getEndTime(), tableInfo.getFrequency());
         if (tableName.startsWith("custom.")
             && timeIntervalMinutes != -1 && timeIntervalMinutes <= 1440) {
           return Config.SQL_ENGINE_PRESTO;
@@ -259,43 +278,56 @@ public class CompoundQuery implements Query {
         .map(metric -> String.format("%s AS %s",
             parseMetric(metric.getMethod(), metric.getField()), metric.getAlias()))
         .collect(Collectors.joining(", "));
+
     String bucketMetricSQL = buckets.stream()
         .map(bucket -> String.format("%s AS %s",
             bucket.getField(),
             bucket.getAlias()))
         .collect(Collectors.joining(", "));
+
     String timeRangeSQL = String.format("logdate>=%s AND logdate<=%s",
         CommonUtils.formatSQLValue(timeRange.getStartTime()),
         CommonUtils.formatSQLValue(timeRange.getEndTime()));
-    String filterSQL = filters.stream()
+
+    String whereSQL = filters.stream()
+        .filter(filter -> filter.getFilterType().equalsIgnoreCase(Config.FILTER_TYPE_WHERE))
         .map(filter -> parseFilter(
-            filter.getMethod(), filter.getField(), filter.getValue()))
+            filter.getMethod(), filter.getField(), filter.getValue(), filter.getDataType()))
         .collect(Collectors.joining(" AND "));
+    whereSQL = !whereSQL.equals("") ? "AND " + whereSQL : "";
+
     String bucketSQL = buckets.stream()
         .map(bucket -> bucket.getField())
         .collect(Collectors.joining(", "));
 
-    String sql = String.format("SELECT %s, %s FROM %s WHERE %s AND %s GROUP BY %s",
-        bucketMetricSQL, metricSQL, tableName, timeRangeSQL, filterSQL, bucketSQL);
+    String havingSQL = filters.stream()
+        .filter(filter -> filter.getFilterType().equalsIgnoreCase(Config.FILTER_TYPE_HAVING))
+        .map(filter -> parseFilter(filter.getMethod(),
+            parseHavingField(filter.getField()), filter.getValue(), filter.getDataType()))
+        .collect(Collectors.joining(" AND "));
+    havingSQL = !havingSQL.equals("") ? "HAVING " + havingSQL : "";
+
+    String sql = String.format("SELECT %s, %s FROM %s WHERE %s %s GROUP BY %s %s",
+        bucketMetricSQL, metricSQL, tableName, timeRangeSQL, whereSQL, bucketSQL, havingSQL);
     return sql;
   }
 
   @Override
   public Map<String, String> parseInfo() {
     Map<String, String> info = new HashMap<>();
-    double SPARK_EXECUTOR_NUM_FACTOR = 1.5;
-    try {
-      TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(tableName);
-      if (tableInfo != null) {
-        long timeIntervalMinutes = getTimeIntervalMinutes(
-            timeRange.getStartTime(),
-            timeRange.getEndTime(),
-            tableInfo.getFrequency());
-        int sparkExecutorNum = (int) (timeIntervalMinutes / 60 * SPARK_EXECUTOR_NUM_FACTOR);
-        info.put("spark.executor.instances", String.valueOf(sparkExecutorNum));
+    if (parseEngine().equals(Config.SQL_ENGINE_SPARK_SQL)) {
+      double SPARK_EXECUTOR_NUM_FACTOR = 1.5;
+      try {
+        TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(tableName);
+        if (tableInfo != null) {
+          long timeIntervalMinutes = getTimeIntervalMinutes(
+              timeRange.getStartTime(), timeRange.getEndTime(), tableInfo.getFrequency());
+          int sparkExecutorNum = (int) (timeIntervalMinutes / 60 * SPARK_EXECUTOR_NUM_FACTOR);
+          info.put(Config.CONF_SPARK_EXECUTOR_NUM, String.valueOf(sparkExecutorNum));
+        }
+      } catch (ConnectionPoolException | SQLException e) {
+        // ignore
       }
-    } catch (ConnectionPoolException | SQLException e) {
-      // ignore
     }
     return info;
   }
@@ -309,34 +341,44 @@ public class CompoundQuery implements Query {
     }
   }
 
-  private static String parseFilter(String method, String field, String value) {
-    String realMethod = method;
+  private static String parseHavingField(String field) {
+    int i = field.indexOf(":");
+    return parseMetric(field.substring(0, i), field.substring(i + 1, field.length()));
+  }
+
+  private static String parseFilter(String method, String field, String value, String dataType) {
     String realValue = CommonUtils.formatSQLValue(value);
-    switch (method) {
-      case "eq":
+    List<String> numericDataTypes = Arrays.asList("INT", "LONG", "FLOAT", "DOUBLE");
+    if (numericDataTypes.contains(dataType.toUpperCase())) {
+      realValue = CommonUtils.formatSQLNumericValue(value);
+    }
+
+    String realMethod = method;
+    switch (method.toUpperCase()) {
+      case "EQ":
         realMethod = "=";
         break;
-      case "ne":
+      case "NE":
         realMethod = "!=";
         break;
-      case "gt":
+      case "GT":
         realMethod = ">";
         break;
-      case "ge":
+      case "GE":
         realMethod = ">=";
         break;
-      case "lt":
+      case "LT":
         realMethod = "<";
         break;
-      case "le":
+      case "LE":
         realMethod = "<=";
         break;
-      case "in":
+      case "IN":
         realMethod = "IN";
         realValue = String.format("(%s)", Stream.of(value.split(","))
             .map(v -> CommonUtils.formatSQLValue(v.trim())).collect(Collectors.joining(", ")));
         break;
-      case "not_in":
+      case "NOT_IN":
         realMethod = "NOT IN";
         realValue = String.format("(%s)", Stream.of(value.split(","))
             .map(v -> CommonUtils.formatSQLValue(v.trim())).collect(Collectors.joining(", ")));

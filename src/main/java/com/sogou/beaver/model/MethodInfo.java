@@ -41,16 +41,16 @@ public class MethodInfo {
     private long id;
     private String name;
     private String description;
-    private String types;
+    private String dataType;
 
     public MetricMethod() {
     }
 
-    public MetricMethod(long id, String name, String description, String types) {
+    public MetricMethod(long id, String name, String description, String dataType) {
       this.id = id;
       this.name = name;
       this.description = description;
-      this.types = types;
+      this.dataType = dataType;
     }
 
     @JsonProperty
@@ -81,12 +81,12 @@ public class MethodInfo {
     }
 
     @JsonProperty
-    public String getTypes() {
-      return types;
+    public String getDataType() {
+      return dataType;
     }
 
-    public void setTypes(String types) {
-      this.types = types;
+    public void setDataType(String dataType) {
+      this.dataType = dataType;
     }
   }
 
@@ -94,16 +94,14 @@ public class MethodInfo {
     private long id;
     private String name;
     private String description;
-    private String types;
 
     public FilterMethod() {
     }
 
-    public FilterMethod(long id, String name, String description, String types) {
+    public FilterMethod(long id, String name, String description) {
       this.id = id;
       this.name = name;
       this.description = description;
-      this.types = types;
     }
 
     @JsonProperty
@@ -131,15 +129,6 @@ public class MethodInfo {
 
     public void setDescription(String description) {
       this.description = description;
-    }
-
-    @JsonProperty
-    public String getTypes() {
-      return types;
-    }
-
-    public void setTypes(String types) {
-      this.types = types;
     }
   }
 }

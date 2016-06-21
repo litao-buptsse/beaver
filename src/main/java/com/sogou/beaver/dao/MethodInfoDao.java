@@ -30,7 +30,7 @@ public class MethodInfoDao {
                 rs.getLong("id"),
                 rs.getString("name"),
                 rs.getString("description"),
-                rs.getString("types")
+                rs.getString("dataType")
             ));
           }
         }
@@ -43,8 +43,7 @@ public class MethodInfoDao {
             filterMethods.add(new MethodInfo.FilterMethod(
                 rs.getLong("id"),
                 rs.getString("name"),
-                rs.getString("description"),
-                rs.getString("types")
+                rs.getString("description")
             ));
           }
         }

@@ -14,7 +14,7 @@ public class QueryPlanParser {
   public static ExecutionPlan parse(String queryType, String queryPlan) throws ParseException {
     Query query;
     try {
-      switch (queryType) {
+      switch (queryType.toUpperCase()) {
         case Config.QUERY_TYPE_RAW:
           query = CommonUtils.fromJson(queryPlan, RawQuery.class);
           break;

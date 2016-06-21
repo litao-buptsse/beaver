@@ -1,5 +1,7 @@
 package com.sogou.beaver.core.engine;
 
+import com.sogou.beaver.Config;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -18,8 +20,8 @@ public class SparkSQLEngine implements SQLEngine {
 
   private int getSparkExecutorNum(Map<String, String> info) {
     int num = DEFAULT_SPARK_EXECUTOR_NUM;
-    if (info.containsKey("spark.executor.instances")) {
-      num = Integer.parseInt(info.get("spark.executor.instances"));
+    if (info.containsKey(Config.CONF_SPARK_EXECUTOR_NUM)) {
+      num = Integer.parseInt(info.get(Config.CONF_SPARK_EXECUTOR_NUM));
     }
     return num < MAX_SPARK_EXECUTOR_NUM ? num : MAX_SPARK_EXECUTOR_NUM;
   }

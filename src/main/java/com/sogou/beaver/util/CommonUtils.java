@@ -69,8 +69,21 @@ public class CommonUtils {
     }
   }
 
+  public static boolean isNumeric(String str) {
+    for (int i = 0; i < str.length(); i++) {
+      if (!Character.isDigit(str.charAt(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   public static String formatSQLValue(String value) {
     return value == null ? null : String.format("'%s'", value.replace("'", "''"));
+  }
+
+  public static String formatSQLNumericValue(String value) {
+    return value == null ? null : value;
   }
 
   public static String formatCSVValue(String value) {

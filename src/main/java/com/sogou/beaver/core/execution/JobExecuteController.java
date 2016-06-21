@@ -44,7 +44,7 @@ public class JobExecuteController implements Runnable {
   }
 
   private SQLEngine getSQLEngine(String name, long jobId) {
-    switch (name) {
+    switch (name.toUpperCase()) {
       case Config.SQL_ENGINE_PRESTO:
         return new PrestoEngine(Config.PRESTO_POOL, jobId);
       case Config.SQL_ENGINE_SPARK_SQL:
