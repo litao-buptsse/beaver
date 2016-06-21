@@ -23,10 +23,11 @@ public class JobDao {
 
   public void createJob(Job job) throws ConnectionPoolException, SQLException {
     JDBCUtils.execute(Config.POOL, String.format(
-        "INSERT INTO %s (userId, state, startTime, queryPlan, executionPlan) " +
-            "VALUES(%s, 'WAIT', %s, %s, %s)", TABLE_NAME,
+        "INSERT INTO %s (userId, state, startTime, queryType, queryPlan, executionPlan) " +
+            "VALUES(%s, 'WAIT', %s, %s, %s, %s)", TABLE_NAME,
         CommonUtils.formatSQLValue(job.getUserId()),
         CommonUtils.formatSQLValue(CommonUtils.now()),
+        CommonUtils.formatSQLValue(job.getQueryType()),
         CommonUtils.formatSQLValue(job.getQueryPlan()),
         CommonUtils.formatSQLValue(job.getExecutionPlan())));
   }
@@ -34,11 +35,12 @@ public class JobDao {
   private void updateJob(Job job, String whereClause) throws ConnectionPoolException, SQLException {
     JDBCUtils.execute(Config.POOL, String.format(
         "UPDATE %s SET userId=%s, state=%s, startTime=%s, endTime=%s, " +
-            "queryPlan=%s, executionPlan=%s, host=%s %s", TABLE_NAME,
+            "queryType=%s, queryPlan=%s, executionPlan=%s, host=%s %s", TABLE_NAME,
         CommonUtils.formatSQLValue(job.getUserId()),
         CommonUtils.formatSQLValue(job.getState()),
         CommonUtils.formatSQLValue(job.getStartTime()),
         CommonUtils.formatSQLValue(job.getEndTime()),
+        CommonUtils.formatSQLValue(job.getQueryType()),
         CommonUtils.formatSQLValue(job.getQueryPlan()),
         CommonUtils.formatSQLValue(job.getExecutionPlan()),
         CommonUtils.formatSQLValue(job.getHost()),
@@ -77,6 +79,7 @@ public class JobDao {
                 rs.getString("state"),
                 rs.getString("startTime"),
                 rs.getString("endTime"),
+                rs.getString("queryType"),
                 rs.getString("queryPlan"),
                 rs.getString("executionPlan"),
                 rs.getString("host")

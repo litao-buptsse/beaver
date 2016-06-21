@@ -1,11 +1,5 @@
 package com.sogou.beaver.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sogou.beaver.db.JDBCConnectionPool;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +20,6 @@ public class RawQuery implements Query {
     this.info = info;
   }
 
-  @JsonProperty
   public String getEngine() {
     return engine;
   }
@@ -35,7 +28,6 @@ public class RawQuery implements Query {
     this.engine = engine;
   }
 
-  @JsonProperty
   public String getSql() {
     return sql;
   }
@@ -44,21 +36,12 @@ public class RawQuery implements Query {
     this.sql = sql;
   }
 
-  @JsonProperty
   public Map<String, String> getInfo() {
     return info;
   }
 
   public void setInfo(Map<String, String> info) {
     this.info = info;
-  }
-
-  public static RawQuery fromJson(String json) throws IOException {
-    return new ObjectMapper().readValue(json.getBytes(), RawQuery.class);
-  }
-
-  public String toJson() throws JsonProcessingException {
-    return new ObjectMapper().writeValueAsString(this);
   }
 
   @Override

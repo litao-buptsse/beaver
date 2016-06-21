@@ -59,7 +59,7 @@ public class JobExecuteController implements Runnable {
       String state = "FAIL";
 
       try {
-        ExecutionPlan plan = ExecutionPlan.fromJson(job.getExecutionPlan());
+        ExecutionPlan plan = CommonUtils.fromJson(job.getExecutionPlan(), ExecutionPlan.class);
         SQLEngine engine = getSQLEngine(plan.getEngine(), job.getId());
         if (engine != null) {
           try {

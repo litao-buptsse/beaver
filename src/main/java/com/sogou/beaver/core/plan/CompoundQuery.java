@@ -1,14 +1,10 @@
 package com.sogou.beaver.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.TableInfo;
 import com.sogou.beaver.util.CommonUtils;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -175,7 +171,6 @@ public class CompoundQuery implements Query {
     this.timeRange = timeRange;
   }
 
-  @JsonProperty
   public String getTableName() {
     return tableName;
   }
@@ -184,7 +179,6 @@ public class CompoundQuery implements Query {
     this.tableName = tableName;
   }
 
-  @JsonProperty
   public List<Metric> getMetrics() {
     return metrics;
   }
@@ -193,7 +187,6 @@ public class CompoundQuery implements Query {
     this.metrics = metrics;
   }
 
-  @JsonProperty
   public List<Bucket> getBuckets() {
     return buckets;
   }
@@ -202,7 +195,6 @@ public class CompoundQuery implements Query {
     this.buckets = buckets;
   }
 
-  @JsonProperty
   public List<Filter> getFilters() {
     return filters;
   }
@@ -211,21 +203,12 @@ public class CompoundQuery implements Query {
     this.filters = filters;
   }
 
-  @JsonProperty
   public TimeRange getTimeRange() {
     return timeRange;
   }
 
   public void setTimeRange(TimeRange timeRange) {
     this.timeRange = timeRange;
-  }
-
-  public static CompoundQuery fromJson(String json) throws IOException {
-    return new ObjectMapper().readValue(json.getBytes(), CompoundQuery.class);
-  }
-
-  public String toJson() throws JsonProcessingException {
-    return new ObjectMapper().writeValueAsString(this);
   }
 
   private static long getTimeIntervalMinutes(String startTime, String endTime, String frequency) {

@@ -4,7 +4,6 @@ import com.sogou.beaver.Config;
 import com.sogou.beaver.core.collector.FileOutputCollector;
 import com.sogou.beaver.core.plan.ExecutionPlan;
 import com.sogou.beaver.core.plan.ParseException;
-import com.sogou.beaver.core.plan.QueryPlan;
 import com.sogou.beaver.core.plan.QueryPlanParser;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.Job;
@@ -26,9 +25,8 @@ public class JobResources {
   @Consumes(MediaType.APPLICATION_JSON)
   public void submitJob(Job job)
       throws ConnectionPoolException, SQLException, IOException, ParseException {
-    QueryPlan queryPlan = QueryPlan.fromJson(job.getQueryPlan());
-    ExecutionPlan executionPlan = QueryPlanParser.parse(queryPlan);
-    job.setExecutionPlan(executionPlan.toJson());
+    ExecutionPlan executionPlan = QueryPlanParser.parse(job.getQueryType(), job.getQueryPlan());
+    job.setExecutionPlan(CommonUtils.toJson(executionPlan));
     Config.JOB_DAO.createJob(job);
   }
 

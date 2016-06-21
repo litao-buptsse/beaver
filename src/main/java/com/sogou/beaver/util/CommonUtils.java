@@ -1,9 +1,12 @@
 package com.sogou.beaver.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -87,5 +90,13 @@ public class CommonUtils {
 
   public static String formatPath(String fileSeperator, String... parts) {
     return Stream.of(parts).collect(Collectors.joining(fileSeperator));
+  }
+
+  public static <T> T fromJson(String json, Class<T> clazz) throws IOException {
+    return new ObjectMapper().readValue(json.getBytes(), clazz);
+  }
+
+  public static String toJson(Object obj) throws JsonProcessingException {
+    return new ObjectMapper().writeValueAsString(obj);
   }
 }

@@ -1,10 +1,5 @@
 package com.sogou.beaver.core.plan;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -46,13 +41,5 @@ public class ExecutionPlan {
 
   public void setInfo(Map<String, String> info) {
     this.info = info;
-  }
-
-  public static ExecutionPlan fromJson(String json) throws IOException {
-    return new ObjectMapper().readValue(json.getBytes(), ExecutionPlan.class);
-  }
-
-  public String toJson() throws JsonProcessingException {
-    return new ObjectMapper().writeValueAsString(this);
   }
 }

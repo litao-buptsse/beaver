@@ -58,6 +58,9 @@ public class Config extends Configuration {
     return builder.build();
   }
 
+  public final static String QUERY_TYPE_RAW = "RAW";
+  public final static String QUERY_TYPE_COMPOUND = "COMPOUND";
+
   public static String FILE_OUTPUT_COLLECTOR_ROOT_DIR;
   public static int JOB_QUEUE_SIZE;
   public static int WORKER_NUM;

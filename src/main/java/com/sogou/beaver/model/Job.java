@@ -11,6 +11,7 @@ public class Job {
   private String state;
   private String startTime;
   private String endTime;
+  private String queryType;
   private String queryPlan;
   private String executionPlan;
   private String host;
@@ -20,12 +21,13 @@ public class Job {
   }
 
   public Job(long id, String userId, String state, String startTime, String endTime,
-             String queryPlan, String executionPlan, String host) {
+             String queryType, String queryPlan, String executionPlan, String host) {
     this.id = id;
     this.userId = userId;
     this.state = state;
     this.startTime = startTime;
     this.endTime = endTime;
+    this.queryType = queryType;
     this.queryPlan = queryPlan;
     this.executionPlan = executionPlan;
     this.host = host;
@@ -74,6 +76,15 @@ public class Job {
 
   public void setEndTime(String endTime) {
     this.endTime = endTime;
+  }
+
+  @JsonProperty
+  public String getQueryType() {
+    return queryType;
+  }
+
+  public void setQueryType(String queryType) {
+    this.queryType = queryType;
   }
 
   @JsonProperty
