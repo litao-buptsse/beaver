@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +121,9 @@ public class CommonUtils {
   }
 
   public static Response sendHttpRequest(String method, String uri, String responseType) {
-    Client client = ClientBuilder.newClient(new ClientConfig());
+    Client client = ClientBuilder.newClient(new ClientConfig()).
+        property(ClientProperties.CONNECT_TIMEOUT, 1000).
+        property(ClientProperties.READ_TIMEOUT, 3000);
     WebTarget target = client.target(uri);
     Invocation.Builder invocationBuilder = target.request(responseType);
     return invocationBuilder.method(method);
