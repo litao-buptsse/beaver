@@ -3,9 +3,15 @@ package com.sogou.beaver.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.JSONPObject;
+import org.glassfish.jersey.client.ClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
@@ -111,5 +117,12 @@ public class CommonUtils {
 
   public static String toJson(Object obj) throws JsonProcessingException {
     return new ObjectMapper().writeValueAsString(obj);
+  }
+
+  public static Response sendHttpRequest(String method, String uri, String responseType) {
+    Client client = ClientBuilder.newClient(new ClientConfig());
+    WebTarget target = client.target(uri);
+    Invocation.Builder invocationBuilder = target.request(responseType);
+    return invocationBuilder.method(method);
   }
 }

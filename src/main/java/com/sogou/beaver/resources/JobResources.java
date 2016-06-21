@@ -7,6 +7,7 @@ import com.sogou.beaver.core.plan.ParseException;
 import com.sogou.beaver.core.plan.QueryPlanParser;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.Job;
+import com.sogou.beaver.model.JobResult;
 import com.sogou.beaver.util.CommonUtils;
 
 import javax.ws.rs.*;
@@ -44,11 +45,15 @@ public class JobResources {
   @GET
   @Path("/download/{id}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  public Response download(@PathParam("id") long id) throws IOException {
-    String downloadFile = String.format("%s.csv", id);
-    return Response.ok(FileOutputCollector.getStreamingOutput(id))
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + downloadFile)
-        .build();
+  public Response download(@PathParam("id") long id)
+      throws IOException, ConnectionPoolException, SQLException {
+    Job job = Config.JOB_DAO.getJobById(id);
+    return job.getHost().equals(Config.HOST) ?
+        Response.ok(FileOutputCollector.getStreamingOutput(id)).
+            header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=%s.csv" + id).build() :
+        CommonUtils.sendHttpRequest(
+            "GET", String.format("http://%s:8080/jobs/download/%s", job.getHost(), job.getId()),
+            MediaType.APPLICATION_OCTET_STREAM);
   }
 
   @GET
@@ -57,8 +62,13 @@ public class JobResources {
   public Object getResult(@PathParam("id") long id,
                           @DefaultValue("0") @QueryParam("start") int start,
                           @DefaultValue("10") @QueryParam("length") int length,
-                          @QueryParam("callback") String callback) throws IOException {
-    return CommonUtils.formatJSONPObject(callback,
-        FileOutputCollector.getJobResult(id, start, length));
+                          @QueryParam("callback") String callback)
+      throws IOException, ConnectionPoolException, SQLException {
+    Job job = Config.JOB_DAO.getJobById(id);
+    return CommonUtils.formatJSONPObject(callback, job.getHost().equals(Config.HOST) ?
+        FileOutputCollector.getJobResult(id, start, length) :
+        CommonUtils.sendHttpRequest(
+            "GET", String.format("http://%s:8080/jobs/result/%s", job.getHost(), job.getId()),
+            MediaType.APPLICATION_JSON).readEntity(JobResult.class));
   }
 }
