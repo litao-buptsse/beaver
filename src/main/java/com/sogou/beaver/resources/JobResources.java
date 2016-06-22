@@ -50,7 +50,7 @@ public class JobResources {
     Job job = Config.JOB_DAO.getJobById(id);
     return job.getHost().equals(Config.HOST) ?
         Response.ok(FileOutputCollector.getStreamingOutput(id)).
-            header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=%s.csv" + id).build() :
+            header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + id + ".csv").build() :
         CommonUtils.sendHttpRequest(
             "GET", String.format("http://%s:8080/jobs/download/%s", job.getHost(), job.getId()),
             MediaType.APPLICATION_OCTET_STREAM);
