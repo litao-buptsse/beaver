@@ -19,7 +19,7 @@ public class EnumInfoDao {
 
   public List<EnumInfo> getEnumInfosByFieldId(long fieldId)
       throws ConnectionPoolException, SQLException {
-    String sql = String.format("SELECT * FROM %s WHERE fieldId=%s", TABLE_NAME, fieldId);
+    String sql = String.format("SELECT * FROM %s WHERE online=1 AND fieldId=%s", TABLE_NAME, fieldId);
     Connection conn = Config.POOL.getConnection();
     try {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -22,7 +22,7 @@ public class MethodInfoDao {
     Connection conn = Config.POOL.getConnection();
     try {
       List<MethodInfo.MetricMethod> metricMethods = new ArrayList<>();
-      String sql = String.format("SELECT * FROM %s", METHOD_METRIC_TABLE_NAME);
+      String sql = String.format("SELECT * FROM %s WHERE online=1", METHOD_METRIC_TABLE_NAME);
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
         try (ResultSet rs = stmt.executeQuery()) {
           while (rs.next()) {
@@ -36,7 +36,7 @@ public class MethodInfoDao {
         }
       }
       List<MethodInfo.FilterMethod> filterMethods = new ArrayList<>();
-      sql = String.format("SELECT * FROM %s", METHOD_FILTER_TABLE_NAME);
+      sql = String.format("SELECT * FROM %s WHERE online=1", METHOD_FILTER_TABLE_NAME);
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
         try (ResultSet rs = stmt.executeQuery()) {
           while (rs.next()) {

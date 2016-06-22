@@ -47,10 +47,10 @@ public class TableInfoDao {
   }
 
   public List<TableInfo> getAllTableInfos() throws ConnectionPoolException, SQLException {
-    return getTableInfos("");
+    return getTableInfos("WHERE online=1");
   }
 
   public TableInfo getTableInfoByName(String name) throws ConnectionPoolException, SQLException {
-    return getTableInfo(String.format("WHERE name='%s'", name));
+    return getTableInfo(String.format("WHERE online=1 AND name='%s'", name));
   }
 }
