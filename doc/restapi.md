@@ -12,6 +12,7 @@
 | 6 | FieldInfo | 获取字段元信息 | /fieldInfos | GET | tableId=$tableId | | $fieldInfos | |
 | 7 | EnumInfo | 获取枚举元信息 | /enumInfos | GET | fieldId=$fieldId | | $enumInfos | |
 | 8 | MethodInfo | 获取函数元信息 | /methodInfos | GET | | | $methodInfo | |
+| 9 | EngineInfo | 获取引擎列表 | /engineInfos | GET | | | $engineInfos | |
 
 ## Resources Format
 
@@ -132,4 +133,14 @@
     }
   ]
 }
+
+### EngineInfo Resource Format
+
+```
+{
+  id: $id,
+  name: $name,
+  description: $description
+}
+
 ```

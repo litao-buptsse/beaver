@@ -78,6 +78,7 @@ public class Config extends Configuration {
   public static FieldInfoDao FIELD_INFO_DAO;
   public static EnumInfoDao ENUM_INFO_DAO;
   public static MethodInfoDao METHOD_INFO_DAO;
+  public static EngineInfoDao ENGINE_INFO_DAO;
   public static JDBCConnectionPool PRESTO_POOL;
 
   public static void initStaticConfig(Config conf) throws ConnectionPoolException {
@@ -100,6 +101,7 @@ public class Config extends Configuration {
     FIELD_INFO_DAO = new FieldInfoDao();
     ENUM_INFO_DAO = new EnumInfoDao();
     METHOD_INFO_DAO = new MethodInfoDao();
+    ENGINE_INFO_DAO = new EngineInfoDao();
 
     // init presto connection pool
     Properties info = new Properties();
