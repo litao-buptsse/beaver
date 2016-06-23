@@ -38,15 +38,37 @@ public class CompoundQueryParser {
   }
 
   public static String parseSQL(CompoundQuery query) throws ParseException {
+    List<String> arrayFields = CompoundQueryParser.parseArrayFields(
+        query.getMetrics(), query.getBuckets(), query.getFilters()
+    );
+
+    String lateralViewSQL = "";
+    if (arrayFields.size() > 0) {
+      switch (parseEngine(query)) {
+        case Config.SQL_ENGINE_PRESTO:
+          lateralViewSQL = String.format("CROSS JOIN UNNEST(%s) AS t (%s)",
+              arrayFields.stream().collect(Collectors.joining(", ")),
+              arrayFields.stream().map(f -> "f_" + f).collect(Collectors.joining(", "))
+          );
+          break;
+        case Config.SQL_ENGINE_SPARK_SQL:
+          lateralViewSQL = arrayFields.stream().map(f ->
+              String.format("LATERAL VIEW explode(%s) %s AS %s", f, "t_" + f, "f_" + f)
+          ).collect(Collectors.joining(" "));
+          break;
+      }
+    }
+
     String bucketMetricSQL = query.getBuckets().stream()
-        .map(bucket -> String.format("%s AS %s", bucket.getField(), bucket.getAlias()))
+        .map(bucket -> String.format("%s AS %s", parseField(bucket.getField()), bucket.getAlias()))
         .collect(Collectors.joining(", "));
 
     String metricSQL = query.getMetrics().stream()
         .map(metric ->
             String.format("%s AS %s",
-                CompoundQueryParser.parseMetric(metric.getMethod(), metric.getField()),
-                metric.getAlias())
+                CompoundQueryParser.parseMetric(metric.getMethod(), parseField(metric.getField())),
+                metric.getAlias()
+            )
         )
         .collect(Collectors.joining(", "));
     metricSQL = !metricSQL.equals("") && !bucketMetricSQL.equals("") ? ", " + metricSQL : metricSQL;
@@ -68,7 +90,7 @@ public class CompoundQueryParser {
         .map(filter ->
             CompoundQueryParser.parseFilter(
                 filter.getMethod(),
-                filter.getField(),
+                parseField(filter.getField()),
                 filter.getValue(),
                 filter.getDataType())
         )
@@ -76,7 +98,7 @@ public class CompoundQueryParser {
     whereSQL = !whereSQL.equals("") ? "AND " + whereSQL : "";
 
     String bucketSQL = query.getBuckets().stream()
-        .map(bucket -> bucket.getField())
+        .map(bucket -> parseField(bucket.getField()))
         .collect(Collectors.joining(", "));
     bucketSQL = !bucketSQL.equals("") ? "GROUP BY " + bucketSQL : "";
 
@@ -86,7 +108,7 @@ public class CompoundQueryParser {
         .map(filter ->
             CompoundQueryParser.parseFilter(
                 filter.getMethod(),
-                CompoundQueryParser.parseHavingField(filter.getField()),
+                CompoundQueryParser.parseHavingField(parseField(filter.getField())),
                 filter.getValue(),
                 filter.getDataType())
         )
@@ -104,9 +126,9 @@ public class CompoundQueryParser {
 
     String limitSQL = "LIMIT " + Config.MAX_RESULT_RECORD_NUM;
 
-    String sql = String.format("SELECT %s %s FROM %s WHERE %s %s %s %s %s %s",
-        bucketMetricSQL, metricSQL, query.getTableName(), timeRangeSQL, whereSQL, bucketSQL,
-        havingSQL, orderBySQL, limitSQL);
+    String sql = String.format("SELECT %s %s FROM %s %s WHERE %s %s %s %s %s %s",
+        bucketMetricSQL, metricSQL, query.getTableName(), lateralViewSQL, timeRangeSQL, whereSQL,
+        bucketSQL, havingSQL, orderBySQL, limitSQL);
     return sql;
   }
 
@@ -161,6 +183,16 @@ public class CompoundQueryParser {
     }
   }
 
+  public static List<String> parseArrayFields(List<CompoundQuery.Metric> metrics,
+                                              List<CompoundQuery.Bucket> buckets,
+                                              List<CompoundQuery.Filter> filters) {
+    return Stream.concat(Stream.concat(
+        metrics.stream().map(m -> getArrayField(m.getField())).filter(f -> f != null),
+        buckets.stream().map(b -> getArrayField(b.getField())).filter(f -> f != null)),
+        filters.stream().map(f -> getArrayField(f.getField())).filter(f -> f != null)
+    ).distinct().collect(Collectors.toList());
+  }
+
   public static String parseMetric(String method, String field) {
     switch (method) {
       case "count_distinct":
@@ -168,6 +200,10 @@ public class CompoundQueryParser {
       default:
         return String.format("%s(%s)", method, field);
     }
+  }
+
+  private static String parseField(String field) {
+    return field.contains(".") ? "f_" + field : field;
   }
 
   public static String parseHavingField(String field) {
