@@ -6,10 +6,7 @@ import com.sogou.beaver.model.TableInfo;
 import com.sogou.beaver.util.CommonUtils;
 
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -369,43 +366,34 @@ public class CompoundQuery implements Query {
   }
 
   private static String parseFilter(String method, String field, String value, String dataType) {
-    String realValue = CommonUtils.formatSQLValue(value);
-    List<String> numericDataTypes = Arrays.asList("INT", "LONG", "FLOAT", "DOUBLE");
-    if (numericDataTypes.contains(dataType.toUpperCase())) {
-      realValue = CommonUtils.formatSQLNumericValue(value);
-    }
+    method = method.toUpperCase();
+    dataType = dataType.toUpperCase();
+
+    List<String> dataTypes = Arrays.asList("INT", "LONG", "FLOAT", "DOUBLE", "BOOLEAN");
+    boolean withQuotes = dataTypes.contains(dataType);
+
+    Map<String, String> filterMethods = new HashMap<String, String>() {{
+      put("EQ", "=");
+      put("NE", "!=");
+      put("GT", ">");
+      put("GE", ">=");
+      put("LT", "<");
+      put("LE", "<=");
+      put("IN", "IN");
+      put("NOT_IN", "NOT IN");
+    }};
 
     String realMethod = method;
-    switch (method.toUpperCase()) {
-      case "EQ":
-        realMethod = "=";
-        break;
-      case "NE":
-        realMethod = "!=";
-        break;
-      case "GT":
-        realMethod = ">";
-        break;
-      case "GE":
-        realMethod = ">=";
-        break;
-      case "LT":
-        realMethod = "<";
-        break;
-      case "LE":
-        realMethod = "<=";
-        break;
-      case "IN":
-        realMethod = "IN";
-        realValue = String.format("(%s)", Stream.of(value.split(","))
-            .map(v -> CommonUtils.formatSQLValue(v.trim())).collect(Collectors.joining(", ")));
-        break;
-      case "NOT_IN":
-        realMethod = "NOT IN";
-        realValue = String.format("(%s)", Stream.of(value.split(","))
-            .map(v -> CommonUtils.formatSQLValue(v.trim())).collect(Collectors.joining(", ")));
-        break;
+    if (filterMethods.containsKey(method)) {
+      realMethod = filterMethods.get(method);
     }
+
+    String realValue = CommonUtils.formatSQLValue(value, withQuotes);
+    if (method.equalsIgnoreCase("IN") || method.equalsIgnoreCase("NOT_IN")) {
+      realValue = String.format("(%s)", Stream.of(value.split(","))
+          .map(v -> CommonUtils.formatSQLValue(v.trim(), withQuotes)).collect(Collectors.joining(", ")));
+    }
+
     return String.format("%s %s %s", field, realMethod, realValue);
   }
 }
