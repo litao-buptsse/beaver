@@ -70,7 +70,7 @@ public class CompoundQueryParser {
         .map(metric ->
             String.format("%s AS %s",
                 CompoundQueryParser.parseMetric(
-                    metric.getMethod(), parseField(engine, metric.getField())
+                    engine, metric.getMethod(), parseField(engine, metric.getField())
                 ),
                 metric.getAlias()
             )
@@ -113,7 +113,7 @@ public class CompoundQueryParser {
         .map(filter ->
             CompoundQueryParser.parseFilter(
                 filter.getMethod(),
-                CompoundQueryParser.parseHavingField(parseField(engine, filter.getField())),
+                CompoundQueryParser.parseHavingField(engine, parseField(engine, filter.getField())),
                 filter.getValue(),
                 filter.getDataType())
         )
@@ -239,9 +239,9 @@ public class CompoundQueryParser {
     return realField;
   }
 
-  public static String parseHavingField(String field) {
+  public static String parseHavingField(String engine, String field) {
     int i = field.indexOf(":");
-    return parseMetric(field.substring(0, i), field.substring(i + 1, field.length()));
+    return parseMetric(engine, field.substring(0, i), field.substring(i + 1, field.length()));
   }
 
   public static String parseFilter(String method, String field, String value, String dataType) {
