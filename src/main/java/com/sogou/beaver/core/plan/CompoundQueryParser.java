@@ -38,6 +38,8 @@ public class CompoundQueryParser {
   }
 
   public static String parseSQL(CompoundQuery query) throws ParseException {
+    String engine = parseEngine(query);
+
     List<String> arrayFields = CompoundQueryParser.parseArrayFields(
         query.getMetrics(), query.getBuckets(), query.getFilters()
     );
@@ -60,13 +62,16 @@ public class CompoundQueryParser {
     }
 
     String bucketMetricSQL = query.getBuckets().stream()
-        .map(bucket -> String.format("%s AS %s", parseField(bucket.getField()), bucket.getAlias()))
+        .map(bucket -> String.format("%s AS %s",
+            parseField(engine, bucket.getField()), bucket.getAlias()))
         .collect(Collectors.joining(", "));
 
     String metricSQL = query.getMetrics().stream()
         .map(metric ->
             String.format("%s AS %s",
-                CompoundQueryParser.parseMetric(metric.getMethod(), parseField(metric.getField())),
+                CompoundQueryParser.parseMetric(
+                    metric.getMethod(), parseField(engine, metric.getField())
+                ),
                 metric.getAlias()
             )
         )
@@ -90,7 +95,7 @@ public class CompoundQueryParser {
         .map(filter ->
             CompoundQueryParser.parseFilter(
                 filter.getMethod(),
-                parseField(filter.getField()),
+                parseField(engine, filter.getField()),
                 filter.getValue(),
                 filter.getDataType())
         )
@@ -98,7 +103,7 @@ public class CompoundQueryParser {
     whereSQL = !whereSQL.equals("") ? "AND " + whereSQL : "";
 
     String bucketSQL = query.getBuckets().stream()
-        .map(bucket -> parseField(bucket.getField()))
+        .map(bucket -> parseField(engine, bucket.getField()))
         .collect(Collectors.joining(", "));
     bucketSQL = !bucketSQL.equals("") ? "GROUP BY " + bucketSQL : "";
 
@@ -108,7 +113,7 @@ public class CompoundQueryParser {
         .map(filter ->
             CompoundQueryParser.parseFilter(
                 filter.getMethod(),
-                CompoundQueryParser.parseHavingField(parseField(filter.getField())),
+                CompoundQueryParser.parseHavingField(parseField(engine, filter.getField())),
                 filter.getValue(),
                 filter.getDataType())
         )
@@ -175,9 +180,11 @@ public class CompoundQueryParser {
     return (endTimestamp - startTimestamp) / 1000 / 60 + 60;
   }
 
-  private static String getArrayField(String field) {
+  private static String[] getArrayField(String field) {
     if (field.contains(".")) {
-      return field.substring(0, field.indexOf("."));
+      String arrayField = field.substring(0, field.indexOf("."));
+      String subField = field.substring(field.indexOf(".") + 1, field.length());
+      return new String[]{arrayField, subField};
     } else {
       return null;
     }
@@ -187,9 +194,12 @@ public class CompoundQueryParser {
                                               List<CompoundQuery.Bucket> buckets,
                                               List<CompoundQuery.Filter> filters) {
     return Stream.concat(Stream.concat(
-        metrics.stream().map(m -> getArrayField(m.getField())).filter(f -> f != null),
-        buckets.stream().map(b -> getArrayField(b.getField())).filter(f -> f != null)),
-        filters.stream().map(f -> getArrayField(f.getField())).filter(f -> f != null)
+        metrics.stream().map(m -> getArrayField(m.getField()))
+            .filter(f -> f != null && f.length == 2 && !f[1].equalsIgnoreCase("size")).map(f -> f[0]),
+        buckets.stream().map(b -> getArrayField(b.getField()))
+            .filter(f -> f != null && f.length == 2 && !f[1].equalsIgnoreCase("size")).map(f -> f[0])),
+        filters.stream().map(f -> getArrayField(f.getField()))
+            .filter(f -> f != null && f.length == 2 && !f[1].equalsIgnoreCase("size")).map(f -> f[0])
     ).distinct().collect(Collectors.toList());
   }
 
@@ -202,8 +212,24 @@ public class CompoundQueryParser {
     }
   }
 
-  private static String parseField(String field) {
-    return field.contains(".") ? "f_" + field : field;
+  private static String parseField(String engine, String field) {
+    String[] arrayField = getArrayField(field);
+    String realField = field;
+    if (arrayField != null) {
+      if (arrayField.length == 2 && arrayField[1].equalsIgnoreCase("size")) {
+        switch (engine) {
+          case Config.SQL_ENGINE_PRESTO:
+            realField = String.format("cardinality(%s)", arrayField[0]);
+            break;
+          case Config.SQL_ENGINE_SPARK_SQL:
+            realField = String.format("size(%s)", arrayField[0]);
+            break;
+        }
+      } else {
+        return "f_" + field;
+      }
+    }
+    return realField;
   }
 
   public static String parseHavingField(String field) {
