@@ -139,7 +139,7 @@ public class CompoundQueryParser {
 
   public static Map<String, String> parseInfo(CompoundQuery query) throws ParseException {
     Map<String, String> info = new HashMap<>();
-    if (parseEngine(query).equals(Config.SQL_ENGINE_SPARK_SQL)) {
+    if (parseEngine(query).equalsIgnoreCase(Config.SQL_ENGINE_SPARK_SQL)) {
       double SPARK_EXECUTOR_NUM_FACTOR = 1.5;
       try {
         TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(query.getTableName());
@@ -203,7 +203,14 @@ public class CompoundQueryParser {
     ).distinct().collect(Collectors.toList());
   }
 
-  public static String parseMetric(String method, String field) {
+  public static String parseMetric(String engine, String method, String field) {
+    if (engine.equalsIgnoreCase(Config.SQL_ENGINE_PRESTO)) {
+      List<String> methods = Arrays.asList("sum", "avg", "max", "min");
+      if (methods.contains(method)) {
+        field = String.format("CAST(%s AS bigint)", field);
+      }
+    }
+
     switch (method) {
       case "count_distinct":
         return String.format("count(DISTINCT %s)", field);
