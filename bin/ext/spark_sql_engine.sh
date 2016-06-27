@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dir=`dirname $0`
-dir=`cd $dir/..; pwd`
+dir=`cd $dir/../..; pwd`
 
 if [ $# -lt 1 ]; then
   echo "usage: $0 <jobId> [executor num]"
@@ -30,7 +30,7 @@ cat - | spark-submit \
   --executor-memory 2G \
   --num-executors $executorNum \
   --class com.sogou.spark.sql.SparkSQLCollector \
-  $dir/bin/spark-sql-collector $hdfsOutput
+  $dir/bin/ext/spark-sql-collector.jar $hdfsOutput
 
 if [ $? -ne 0 ]; then
   echo "failed to run the job: $jobId"
