@@ -45,17 +45,7 @@ public class RawQuery implements Query {
   }
 
   @Override
-  public String parseEngine() throws ParseException {
-    return engine;
-  }
-
-  @Override
-  public String parseSQL() throws ParseException {
-    return sql;
-  }
-
-  @Override
-  public Map<String, String> parseInfo() throws ParseException {
-    return info != null ? info : new HashMap<>();
+  public ExecutionPlan parse() throws ParseException {
+    return new ExecutionPlan(engine, sql, info != null ? info : new HashMap<>());
   }
 }

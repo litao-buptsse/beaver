@@ -62,7 +62,8 @@ public class Config extends Configuration {
   public final static String QUERY_TYPE_COMPOUND = "COMPOUND";
   public final static String SQL_ENGINE_PRESTO = "PRESTO";
   public final static String SQL_ENGINE_SPARK_SQL = "SPARK-SQL";
-  public final static String CONF_SPARK_EXECUTOR_NUM = "spark.executor.instances";
+  public final static String SPARK_EXECUTOR_NUM = "spark.executor.instances";
+  public final static double SPARK_EXECUTOR_NUM_FACTOR = 1.5;
   public final static String FILTER_TYPE_WHERE = "WHERE";
   public final static String FILTER_TYPE_HAVING = "HAVING";
 

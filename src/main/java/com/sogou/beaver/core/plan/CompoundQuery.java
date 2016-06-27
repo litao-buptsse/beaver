@@ -1,7 +1,6 @@
 package com.sogou.beaver.core.plan;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Tao Li on 6/19/16.
@@ -224,17 +223,7 @@ public class CompoundQuery implements Query {
   }
 
   @Override
-  public String parseEngine() throws ParseException {
-    return CompoundQueryParser.parseEngine(this);
-  }
-
-  @Override
-  public String parseSQL() throws ParseException {
-    return CompoundQueryParser.parseSQL(this);
-  }
-
-  @Override
-  public Map<String, String> parseInfo() throws ParseException {
-    return CompoundQueryParser.parseInfo(this);
+  public ExecutionPlan parse() throws ParseException {
+    return CompoundQueryParser.parseExecutionPlan(this);
   }
 }

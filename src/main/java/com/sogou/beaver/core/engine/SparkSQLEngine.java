@@ -20,8 +20,8 @@ public class SparkSQLEngine implements SQLEngine {
 
   private int getSparkExecutorNum(Map<String, String> info) {
     int num = DEFAULT_SPARK_EXECUTOR_NUM;
-    if (info.containsKey(Config.CONF_SPARK_EXECUTOR_NUM)) {
-      num = Integer.parseInt(info.get(Config.CONF_SPARK_EXECUTOR_NUM));
+    if (info.containsKey(Config.SPARK_EXECUTOR_NUM)) {
+      num = Integer.parseInt(info.get(Config.SPARK_EXECUTOR_NUM));
     }
     return num < MAX_SPARK_EXECUTOR_NUM ? num : MAX_SPARK_EXECUTOR_NUM;
   }

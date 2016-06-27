@@ -1,5 +1,9 @@
 package com.sogou.beaver.core.plan;
 
+import com.sogou.beaver.Config;
+import com.sogou.beaver.util.CommonUtils;
+
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -41,5 +45,21 @@ public class ExecutionPlan {
 
   public void setInfo(Map<String, String> info) {
     this.info = info;
+  }
+
+  public static ExecutionPlan fromQueryPlan(String queryType, String queryPlan)
+      throws ParseException {
+    try {
+      switch (queryType.toUpperCase()) {
+        case Config.QUERY_TYPE_RAW:
+          return CommonUtils.fromJson(queryPlan, RawQuery.class).parse();
+        case Config.QUERY_TYPE_COMPOUND:
+          return CommonUtils.fromJson(queryPlan, CompoundQuery.class).parse();
+        default:
+          throw new ParseException("Not support query type: " + queryType);
+      }
+    } catch (IOException e) {
+      throw new ParseException("Fail to parseExecutionPlan query plan: " + queryType);
+    }
   }
 }
