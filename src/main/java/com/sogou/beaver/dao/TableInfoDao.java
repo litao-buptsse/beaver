@@ -28,9 +28,11 @@ public class TableInfoDao {
           while (rs.next()) {
             tableInfos.add(new TableInfo(
                 rs.getLong("id"),
-                rs.getString("name"),
+                rs.getString("database"),
+                rs.getString("tableName"),
                 rs.getString("description"),
-                rs.getString("frequency")
+                rs.getString("frequency"),
+                rs.getString("fileFormat")
             ));
           }
           return tableInfos;

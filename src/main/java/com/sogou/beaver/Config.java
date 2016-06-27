@@ -66,6 +66,11 @@ public class Config extends Configuration {
   public final static double SPARK_EXECUTOR_NUM_FACTOR = 1.5;
   public final static String FILTER_TYPE_WHERE = "WHERE";
   public final static String FILTER_TYPE_HAVING = "HAVING";
+  public final static String FILE_FORMAT_TEXTFILE = "TEXTFILE";
+  public final static String FILE_FORMAT_RCFILE = "RCFILE";
+  public final static String FILE_FORMAT_ORC = "ORC";
+  public final static String HIVE_DATABASE_DEFAULT = "default";
+  public final static String HIVE_DATABASE_CUSTOM = "custom";
 
   public static String FILE_OUTPUT_COLLECTOR_ROOT_DIR;
   public static int JOB_QUEUE_SIZE;

@@ -23,12 +23,16 @@ public class CompoundQueryParser {
     try {
       TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(query.getTableName());
       if (tableInfo != null) {
-        long timeIntervalMinutes = getTimeIntervalMinutes(
-            query.getTimeRange().getStartTime(),
-            query.getTimeRange().getEndTime(),
-            tableInfo.getFrequency()
-        );
-        if (query.getTableName().startsWith("custom.")
+        long timeIntervalMinutes = getTimeIntervalMinutes(tableInfo.getFrequency(),
+            query.getTimeRange().getStartTime(), query.getTimeRange().getEndTime());
+        /*
+         * Presto Engine Condition:
+         * 1. FileFormat: ORC
+         * 2. Database: custom
+         * 3. Time Range: with a day
+         */
+        if (tableInfo.getFileFormat().equalsIgnoreCase(Config.FILE_FORMAT_ORC)
+            && tableInfo.getDatabase().equalsIgnoreCase(Config.HIVE_DATABASE_CUSTOM)
             && timeIntervalMinutes != -1 && timeIntervalMinutes <= 1440) {
           engine = Config.SQL_ENGINE_PRESTO;
         } else {
@@ -175,7 +179,7 @@ public class CompoundQueryParser {
     }
   }
 
-  private static long getTimeIntervalMinutes(String startTime, String endTime, String frequency) {
+  private static long getTimeIntervalMinutes(String frequency, String startTime, String endTime) {
     String timeFormat;
     switch (frequency) {
       case "DAY":

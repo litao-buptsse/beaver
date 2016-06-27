@@ -8,14 +8,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TableInfo {
   private long id;
   private String name;
+  private String database;
+  private String tableName;
   private String description;
   private String frequency;
+  private String fileFormat;
 
-  public TableInfo(long id, String name, String description, String frequency) {
+  public TableInfo(long id, String database, String tableName, String description,
+                   String frequency, String fileFormat) {
     this.id = id;
-    this.name = name;
+    this.database = database;
+    this.tableName = tableName;
+    this.name = database + "." + tableName;
     this.description = description;
     this.frequency = frequency;
+    this.fileFormat = fileFormat;
   }
 
   @JsonProperty
@@ -37,6 +44,24 @@ public class TableInfo {
   }
 
   @JsonProperty
+  public String getDatabase() {
+    return database;
+  }
+
+  public void setDatabase(String database) {
+    this.database = database;
+  }
+
+  @JsonProperty
+  public String getTableName() {
+    return tableName;
+  }
+
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
+  }
+
+  @JsonProperty
   public String getDescription() {
     return description;
   }
@@ -52,5 +77,14 @@ public class TableInfo {
 
   public void setFrequency(String frequency) {
     this.frequency = frequency;
+  }
+
+  @JsonProperty
+  public String getFileFormat() {
+    return fileFormat;
+  }
+
+  public void setFileFormat(String fileFormat) {
+    this.fileFormat = fileFormat;
   }
 }
