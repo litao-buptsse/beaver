@@ -53,6 +53,8 @@ public class TableInfoDao {
   }
 
   public TableInfo getTableInfoByName(String name) throws ConnectionPoolException, SQLException {
-    return getTableInfo(String.format("WHERE online=1 AND name='%s'", name));
+    String[] arr = name.split(".");
+    return (arr == null || arr.length != 2) ? null : getTableInfo(
+        String.format("WHERE online=1 AND database='%s' AND tableName='%s'", arr[0], arr[1]));
   }
 }
