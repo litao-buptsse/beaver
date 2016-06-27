@@ -3,7 +3,7 @@
 dir=`dirname $0`
 dir=`cd $dir/../..; pwd`
 
-if [ $# -ne 3 ]; then
+if [ $# -lt 3 ]; then
   echo "usage: $0 <tableName> <startTime> <endTime>"
   exit 1
 fi
