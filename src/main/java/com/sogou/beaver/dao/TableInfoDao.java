@@ -20,6 +20,7 @@ public class TableInfoDao {
   private List<TableInfo> getTableInfos(String whereClause)
       throws ConnectionPoolException, SQLException {
     String sql = String.format("SELECT * FROM %s %s", TABLE_NAME, whereClause);
+    System.out.println(sql);
     Connection conn = Config.POOL.getConnection();
     try {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -54,7 +55,8 @@ public class TableInfoDao {
 
   public TableInfo getTableInfoByName(String name) throws ConnectionPoolException, SQLException {
     String[] arr = name.split("\\.");
+    System.out.println(arr.length);
     return (arr == null || arr.length != 2) ? null : getTableInfo(
-        String.format("WHERE online=1 AND database='%s' AND tableName='%s'", arr[0], arr[1]));
+        String.format("WHERE online=1 AND `database`='%s' AND tableName='%s'", arr[0], arr[1]));
   }
 }
