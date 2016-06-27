@@ -26,11 +26,8 @@ build:
 docker-build: build
 	mkdir -p .tmp .tmp/bin .tmp/conf .tmp/lib
 	cp target/$(JAR) .tmp/lib
-	cp conf/beaver.yml .tmp/conf
-	cp bin/start.sh .tmp/bin
-	cp bin/runner.py .tmp/bin
-	cp bin/spark_sql_engine.sh .tmp/bin
-	cp bin/spark-sql-collector .tmp/bin
+	cp conf/* .tmp/conf
+	cp -r bin/* .tmp/bin
 	docker build $(BUILD_PARAM) -t $(IMAGE_MAIN_NAME) .
 	docker tag -f $(IMAGE_MAIN_NAME) $(REGISTRY)/$(IMAGE)
 	rm -fr .tmp
