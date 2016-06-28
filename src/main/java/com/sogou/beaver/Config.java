@@ -102,7 +102,7 @@ public class Config extends Configuration {
     MAX_RESULT_RECORD_NUM = Integer.parseInt(beaverConf.getOrDefault("maxResultRecordNum", "10000"));
     DEFAULT_SPARK_EXECUTOR_NUM = Integer.parseInt(beaverConf.getOrDefault("defaultSparkExecutorNum", "2"));
     MAX_SPARK_EXECUTOR_NUM = Integer.parseInt(beaverConf.getOrDefault("maxSparkExecutorNum", "100"));
-    SPARK_EXECUTOR_NUM_FACTOR = Integer.parseInt(beaverConf.getOrDefault("sparkExecutorNumFactor", "0.2"));
+    SPARK_EXECUTOR_NUM_FACTOR = Double.parseDouble(beaverConf.getOrDefault("sparkExecutorNumFactor", "0.2"));
 
     // init db connection pool
     POOL = constructJDBCConnectionPool(beaverDBConf);
