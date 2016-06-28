@@ -25,7 +25,7 @@ hadoop fs -rm -r $hdfsOutput
 cat - | spark-submit \
   --name beaver-$jobId \
   --master yarn-client \
-  --driver-memory 1G \
+  --driver-memory 2G \
   --conf spark.yarn.am.memory=1G \
   --executor-memory 2G \
   --num-executors $executorNum \

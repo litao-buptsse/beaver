@@ -70,6 +70,11 @@ public class Config extends Configuration {
   public final static String HIVE_DATABASE_DEFAULT = "default";
   public final static String HIVE_DATABASE_CUSTOM = "custom";
 
+  public final static String SPARK_EXECUTOR_NUM_CONFIG = "spark.executor.instances";
+  public static int DEFAULT_SPARK_EXECUTOR_NUM;
+  public static int MAX_SPARK_EXECUTOR_NUM;
+  public static double SPARK_EXECUTOR_NUM_FACTOR;
+
   public static String FILE_OUTPUT_COLLECTOR_ROOT_DIR;
   public static int JOB_QUEUE_SIZE;
   public static int WORKER_NUM;
@@ -95,6 +100,9 @@ public class Config extends Configuration {
     WORKER_NUM = Integer.parseInt(beaverConf.getOrDefault("workerNum", "10"));
     HOST = beaverConf.getOrDefault("host", CommonUtils.ip());
     MAX_RESULT_RECORD_NUM = Integer.parseInt(beaverConf.getOrDefault("maxResultRecordNum", "10000"));
+    DEFAULT_SPARK_EXECUTOR_NUM = Integer.parseInt(beaverConf.getOrDefault("defaultSparkExecutorNum", "2"));
+    MAX_SPARK_EXECUTOR_NUM = Integer.parseInt(beaverConf.getOrDefault("maxSparkExecutorNum", "100"));
+    SPARK_EXECUTOR_NUM_FACTOR = Integer.parseInt(beaverConf.getOrDefault("sparkExecutorNumFactor", "0.2"));
 
     // init db connection pool
     POOL = constructJDBCConnectionPool(beaverDBConf);

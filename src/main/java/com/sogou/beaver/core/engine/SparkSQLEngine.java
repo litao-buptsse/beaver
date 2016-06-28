@@ -1,5 +1,6 @@
 package com.sogou.beaver.core.engine;
 
+import com.sogou.beaver.Config;
 import com.sogou.beaver.common.CommonUtils;
 import com.sogou.beaver.common.StreamCollector;
 
@@ -11,11 +12,6 @@ import java.util.Map;
  * Created by Tao Li on 2016/6/17.
  */
 public class SparkSQLEngine implements SQLEngine {
-  private final static String SPARK_EXECUTOR_NUM_CONFIG = "spark.executor.instances";
-  private final static int DEFAULT_SPARK_EXECUTOR_NUM = 2;
-  private final static int MAX_SPARK_EXECUTOR_NUM = 100;
-  private final static double SPARK_EXECUTOR_NUM_FACTOR = 1.0;
-
   private final long jobId;
 
   public SparkSQLEngine(long jobId) {
@@ -23,15 +19,16 @@ public class SparkSQLEngine implements SQLEngine {
   }
 
   private int getSparkExecutorNum(Map<String, String> info) {
-    int num = DEFAULT_SPARK_EXECUTOR_NUM;
-    if (info.containsKey(SPARK_EXECUTOR_NUM_CONFIG)) {
-      num = Integer.parseInt(info.get(SPARK_EXECUTOR_NUM_CONFIG));
+    int num = Config.DEFAULT_SPARK_EXECUTOR_NUM;
+    if (info.containsKey(Config.SPARK_EXECUTOR_NUM_CONFIG)) {
+      num = Integer.parseInt(info.get(Config.SPARK_EXECUTOR_NUM_CONFIG));
     } else if (info.containsKey("tableName")
         && info.containsKey("startTime") && info.containsKey("endTime")) {
       StreamCollector collector = new StreamCollector();
       String command = String.format("bin/ext/get_spark_executor_num.sh %s %s %s %s %s %s",
           info.get("tableName"), info.get("startTime"), info.get("endTime"),
-          SPARK_EXECUTOR_NUM_FACTOR, DEFAULT_SPARK_EXECUTOR_NUM, MAX_SPARK_EXECUTOR_NUM);
+          Config.SPARK_EXECUTOR_NUM_FACTOR, Config.DEFAULT_SPARK_EXECUTOR_NUM,
+          Config.MAX_SPARK_EXECUTOR_NUM);
       try {
         CommonUtils.runProcess(command, collector, null);
         List<String> output = collector.getOutput();

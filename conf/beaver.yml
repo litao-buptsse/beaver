@@ -26,6 +26,9 @@ beaver:
   fileOutputCollectorRootDir: data
   jobQueueSize: 20
   workerNum: 10
+  defaultSparkExecutorNum: 2
+  maxSparkExecutorNum: 100
+  sparkExecutorNumFactor: 0.2
 
 beaverDB:
   driverClass: com.mysql.jdbc.Driver
