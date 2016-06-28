@@ -28,7 +28,7 @@ beaver:
   workerNum: 10
   defaultSparkExecutorNum: 2
   maxSparkExecutorNum: 100
-  sparkExecutorNumFactor: 0.2
+  sparkExecutorNumFactor: 0.25
 
 beaverDB:
   driverClass: com.mysql.jdbc.Driver
