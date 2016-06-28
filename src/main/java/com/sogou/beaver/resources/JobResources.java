@@ -2,14 +2,12 @@ package com.sogou.beaver.resources;
 
 import com.sogou.beaver.Config;
 import com.sogou.beaver.core.collector.FileOutputCollector;
-import com.sogou.beaver.core.plan.CompoundQuery;
 import com.sogou.beaver.core.plan.ExecutionPlan;
 import com.sogou.beaver.core.plan.ParseException;
-import com.sogou.beaver.core.plan.RawQuery;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.Job;
 import com.sogou.beaver.model.JobResult;
-import com.sogou.beaver.util.CommonUtils;
+import com.sogou.beaver.common.CommonUtils;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.HttpHeaders;

@@ -3,7 +3,7 @@ package com.sogou.beaver.core.plan;
 import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.TableInfo;
-import com.sogou.beaver.util.CommonUtils;
+import com.sogou.beaver.common.CommonUtils;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -36,8 +36,9 @@ public class CompoundQueryParser {
             && timeIntervalMinutes != -1 && timeIntervalMinutes <= 1440) {
           engine = Config.SQL_ENGINE_PRESTO;
         } else {
-          int executorNum = (int) (timeIntervalMinutes / 60 * Config.SPARK_EXECUTOR_NUM_FACTOR);
-          info.put(Config.SPARK_EXECUTOR_NUM, String.valueOf(executorNum));
+          info.put("tableName", tableInfo.getName());
+          info.put("startTime", query.getTimeRange().getStartTime());
+          info.put("endTime", query.getTimeRange().getEndTime());
         }
       }
     } catch (ConnectionPoolException | SQLException e) {

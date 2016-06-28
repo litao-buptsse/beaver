@@ -2,7 +2,7 @@ package com.sogou.beaver.resources;
 
 import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
-import com.sogou.beaver.util.CommonUtils;
+import com.sogou.beaver.common.CommonUtils;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

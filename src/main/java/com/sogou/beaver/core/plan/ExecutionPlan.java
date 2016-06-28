@@ -1,7 +1,7 @@
 package com.sogou.beaver.core.plan;
 
 import com.sogou.beaver.Config;
-import com.sogou.beaver.util.CommonUtils;
+import com.sogou.beaver.common.CommonUtils;
 
 import java.io.IOException;
 import java.util.Map;

@@ -3,7 +3,7 @@ package com.sogou.beaver.core.collector;
 import com.sogou.beaver.Config;
 import com.sogou.beaver.core.meta.ColumnMeta;
 import com.sogou.beaver.model.JobResult;
-import com.sogou.beaver.util.CommonUtils;
+import com.sogou.beaver.common.CommonUtils;
 
 import javax.ws.rs.core.StreamingOutput;
 import java.io.BufferedReader;

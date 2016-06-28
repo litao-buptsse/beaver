@@ -8,7 +8,7 @@ import com.sogou.beaver.core.engine.SparkSQLEngine;
 import com.sogou.beaver.core.plan.ExecutionPlan;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.Job;
-import com.sogou.beaver.util.CommonUtils;
+import com.sogou.beaver.common.CommonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

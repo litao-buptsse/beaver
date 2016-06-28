@@ -4,7 +4,7 @@ import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.db.JDBCUtils;
 import com.sogou.beaver.model.Job;
-import com.sogou.beaver.util.CommonUtils;
+import com.sogou.beaver.common.CommonUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

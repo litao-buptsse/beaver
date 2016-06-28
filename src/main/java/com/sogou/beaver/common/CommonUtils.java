@@ -1,4 +1,4 @@
-package com.sogou.beaver.util;
+package com.sogou.beaver.common;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -119,5 +119,39 @@ public class CommonUtils {
     WebTarget target = client.target(uri);
     Invocation.Builder invocationBuilder = target.request(responseType);
     return invocationBuilder.method(method);
+  }
+
+  public static int runProcess(String command, StreamProcessor stdoutProcessor,
+                               StreamProcessor stderrProcessor) throws IOException {
+    ProcessBuilder builder = new ProcessBuilder("bin/ext/runner.py", command);
+    Process process = null;
+    try {
+      process = builder.start();
+      if (stdoutProcessor != null) {
+        new StreamWatcher(process.getInputStream(), stdoutProcessor).start();
+      }
+      if (stderrProcessor != null) {
+        new StreamWatcher(process.getErrorStream(), stderrProcessor).start();
+      }
+      return process.waitFor();
+    } catch (IOException | InterruptedException e) {
+      if (process != null) {
+        process.destroy();
+      }
+      throw new IOException(e);
+    }
+  }
+
+  public static int runProcess(String command) throws IOException {
+    return runProcess(command, null, null);
+  }
+
+  public static boolean isNumeric(String str) {
+    for (int i = 0; i < str.length(); i++) {
+      if (!Character.isDigit(str.charAt(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 }
