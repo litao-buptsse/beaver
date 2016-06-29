@@ -3,7 +3,7 @@
 dir=`dirname $0`
 dir=`cd $dir/../..; pwd`
 
-factor=0.2
+factor=0.25
 min=2
 max=100
 
