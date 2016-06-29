@@ -18,17 +18,15 @@ public class SparkSQLEngine implements SQLEngine {
     this.jobId = jobId;
   }
 
-  private int getSparkExecutorNum(Map<String, String> info) {
+  private int getSparkExecutorNum(String sql, Map<String, String> info) {
     int num = Config.DEFAULT_SPARK_EXECUTOR_NUM;
     if (info.containsKey(Config.SPARK_EXECUTOR_NUM_CONFIG)) {
       num = Integer.parseInt(info.get(Config.SPARK_EXECUTOR_NUM_CONFIG));
-    } else if (info.containsKey("tableName")
-        && info.containsKey("startTime") && info.containsKey("endTime")) {
+    } else {
       StreamCollector collector = new StreamCollector();
-      String command = String.format("bin/ext/get_spark_executor_num.sh %s %s %s %s %s %s",
-          info.get("tableName"), info.get("startTime"), info.get("endTime"),
-          Config.SPARK_EXECUTOR_NUM_FACTOR, Config.DEFAULT_SPARK_EXECUTOR_NUM,
-          Config.MAX_SPARK_EXECUTOR_NUM);
+      String command = String.format("echo \"%s\" | bin/ext/get_spark_executor_num.sh %s %s %s",
+          sql, Config.SPARK_EXECUTOR_NUM_FACTOR,
+          Config.DEFAULT_SPARK_EXECUTOR_NUM, Config.MAX_SPARK_EXECUTOR_NUM);
       try {
         CommonUtils.runProcess(command, collector, null);
         List<String> output = collector.getOutput();
@@ -46,7 +44,7 @@ public class SparkSQLEngine implements SQLEngine {
   public boolean execute(String sql, Map<String, String> info) throws EngineExecutionException {
     String command = String.format(
         "echo \"%s\" | bin/ext/spark_sql_engine.sh %s %s >logs/jobs/%s.log 2>&1",
-        sql, jobId, getSparkExecutorNum(info), jobId);
+        sql, jobId, getSparkExecutorNum(sql, info), jobId);
     try {
       return CommonUtils.runProcess(command) == 0;
     } catch (IOException e) {

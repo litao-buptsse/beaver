@@ -18,8 +18,14 @@ import java.util.stream.Stream;
  */
 public class CompoundQueryParser {
   public static ExecutionPlan parseExecutionPlan(CompoundQuery query) throws ParseException {
+    String engine = parseEngine(query);
+    String sql = parseSQL(engine, query);
+    return new ExecutionPlan(engine, sql, new HashMap<>());
+  }
+
+  private static String parseEngine(CompoundQuery query) {
     String engine = Config.SQL_ENGINE_SPARK_SQL;
-    Map<String, String> info = new HashMap<>();
+
     try {
       TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(query.getTableName());
       if (tableInfo != null) {
@@ -35,19 +41,13 @@ public class CompoundQueryParser {
             && tableInfo.getDatabase().equalsIgnoreCase(Config.HIVE_DATABASE_CUSTOM)
             && timeIntervalMinutes != -1 && timeIntervalMinutes <= 1440) {
           engine = Config.SQL_ENGINE_PRESTO;
-        } else {
-          info.put("tableName", tableInfo.getName());
-          info.put("startTime", query.getTimeRange().getStartTime());
-          info.put("endTime", query.getTimeRange().getEndTime());
         }
       }
     } catch (ConnectionPoolException | SQLException e) {
       // ignore
     }
 
-    String sql = parseSQL(engine, query);
-
-    return new ExecutionPlan(engine, sql, info);
+    return engine;
   }
 
   private static String parseSQL(String engine, CompoundQuery query) throws ParseException {
