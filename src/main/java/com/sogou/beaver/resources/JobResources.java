@@ -68,7 +68,8 @@ public class JobResources {
     return CommonUtils.formatJSONPObject(callback, job.getHost().equals(Config.HOST) ?
         FileOutputCollector.getJobResult(id, start, length) :
         CommonUtils.sendHttpRequest(
-            "GET", String.format("http://%s:8080/jobs/result/%s", job.getHost(), job.getId()),
+            "GET", String.format("http://%s:8080/jobs/result/%s?start=%s&length=%s",
+                job.getHost(), job.getId(), start, length),
             MediaType.APPLICATION_JSON).readEntity(JobResult.class));
   }
 }
