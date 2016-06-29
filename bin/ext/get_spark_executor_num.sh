@@ -16,5 +16,5 @@ cat - | spark-submit \
   --class com.sogou.spark.sql.GetSparkExecutorNum \
   --driver-memory 2G \
   $dir/bin/ext/spark-sql-collector.jar \
-  $tableName $startTime $endTime $factor $min $max 2>&1 | \
+  $factor $min $max 2>&1 | \
   grep "^executors:" | awk -F":" '{print $2}'
