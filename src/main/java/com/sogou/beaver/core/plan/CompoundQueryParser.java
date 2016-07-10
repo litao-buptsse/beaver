@@ -33,11 +33,12 @@ public class CompoundQueryParser {
             query.getTimeRange().getStartTime(), query.getTimeRange().getEndTime());
         /*
          * Presto Engine Condition:
-         * 1. FileFormat: ORC
+         * 1. FileFormat: RC/ORC
          * 2. Database: custom
          * 3. Time Range: with a day
          */
-        if (tableInfo.getFileFormat().equalsIgnoreCase(Config.FILE_FORMAT_ORC)
+        if ((tableInfo.getFileFormat().equalsIgnoreCase(Config.FILE_FORMAT_ORC)
+            || tableInfo.getFileFormat().equalsIgnoreCase(Config.FILE_FORMAT_RCFILE))
             && tableInfo.getDatabase().equalsIgnoreCase(Config.HIVE_DATABASE_CUSTOM)
             && timeIntervalMinutes != -1 && timeIntervalMinutes <= 1440) {
           engine = Config.SQL_ENGINE_PRESTO;
@@ -167,7 +168,8 @@ public class CompoundQueryParser {
   }
 
   private static String parseLimitSQL() {
-    return "LIMIT " + Config.MAX_RESULT_RECORD_NUM;
+    // return "LIMIT " + Config.MAX_RESULT_RECORD_NUM;
+    return "";
   }
 
   private static String[] getArrayField(String field) {

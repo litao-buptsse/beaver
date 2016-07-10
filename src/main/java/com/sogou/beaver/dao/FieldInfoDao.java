@@ -19,7 +19,8 @@ public class FieldInfoDao {
 
   public List<FieldInfo> getFieldInfosByTableId(long tableId)
       throws ConnectionPoolException, SQLException {
-    String sql = String.format("SELECT * FROM %s WHERE online=1 AND tableId=%s", TABLE_NAME, tableId);
+    String sql = String.format("SELECT * FROM %s WHERE online=1 AND tableId=%s " +
+        "ORDER BY description", TABLE_NAME, tableId);
     Connection conn = Config.POOL.getConnection();
     try {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
