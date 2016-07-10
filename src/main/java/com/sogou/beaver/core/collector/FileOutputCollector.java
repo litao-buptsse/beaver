@@ -79,7 +79,8 @@ public class FileOutputCollector implements RelationOutputCollector {
 
   @Override
   public void collect(List<String> values) throws IOException {
-    String line = values.stream().collect(Collectors.joining(FIELD_SEPARATOR));
+    String line = values.stream().map(value -> value.replace(FIELD_SEPARATOR, " "))
+        .collect(Collectors.joining(FIELD_SEPARATOR));
     if (isFirstLine) {
       dataFileWriter.write(line);
       isFirstLine = false;
