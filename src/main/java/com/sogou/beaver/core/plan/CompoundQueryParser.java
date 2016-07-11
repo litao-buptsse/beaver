@@ -273,6 +273,7 @@ public class CompoundQueryParser {
       put("LE", "<=");
       put("IN", "IN");
       put("NOT_IN", "NOT IN");
+      put("LIKE", "LIKE");
     }};
 
     String realMethod = method;
@@ -287,6 +288,14 @@ public class CompoundQueryParser {
           .collect(Collectors.joining(", ")));
     }
 
-    return String.format("%s %s %s", field, realMethod, realValue);
+    String filter = String.format("%s %s %s", field, realMethod, realValue);
+
+    if (method.equalsIgnoreCase("LIKE")) {
+      filter = String.format("(%s)", Stream.of(value.split(","))
+          .map(v -> String.format("%s LIKE '%%s%'", field, v.trim()))
+          .collect(Collectors.joining(" OR ")));
+    }
+
+    return filter;
   }
 }
