@@ -33,7 +33,6 @@ public class TableInfoDao {
                 rs.getString("description"),
                 rs.getString("frequency"),
                 rs.getString("fileFormat"),
-                rs.getBoolean("isExplode"),
                 rs.getString("explodeField"),
                 rs.getString("preFilterSQL")
             ));
@@ -69,9 +68,9 @@ public class TableInfoDao {
         database, tableName);
 
     if (arr2.length == 1) {
-      sql = sql + " AND isExplode=0";
+      sql = sql + " AND (explodeField is null OR explodeField='')";
     } else {
-      sql = sql + " AND isExplode=1 AND explodeField='" + arr2[1] + "'";
+      sql = sql + " AND explodeField='" + arr2[1] + "'";
     }
 
     return getTableInfo(sql);
