@@ -13,16 +13,23 @@ public class TableInfo {
   private String description;
   private String frequency;
   private String fileFormat;
+  private boolean isExplode;
+  private String explodeField;
+  private String preFilterSQL;
 
   public TableInfo(long id, String database, String tableName, String description,
-                   String frequency, String fileFormat) {
+                   String frequency, String fileFormat, boolean isExplode, String explodeField,
+                   String preFilterSQL) {
     this.id = id;
     this.database = database;
     this.tableName = tableName;
-    this.name = database + "." + tableName;
+    this.name = database + "." + tableName + (isExplode ? ":" + explodeField : "");
     this.description = description;
     this.frequency = frequency;
     this.fileFormat = fileFormat;
+    this.isExplode = isExplode;
+    this.explodeField = explodeField;
+    this.preFilterSQL = preFilterSQL;
   }
 
   @JsonProperty
@@ -86,5 +93,32 @@ public class TableInfo {
 
   public void setFileFormat(String fileFormat) {
     this.fileFormat = fileFormat;
+  }
+
+  @JsonProperty
+  public boolean getIsExplode() {
+    return isExplode;
+  }
+
+  public void setExplode(boolean explode) {
+    isExplode = explode;
+  }
+
+  @JsonProperty
+  public String getExplodeField() {
+    return explodeField;
+  }
+
+  public void setExplodeField(String explodeField) {
+    this.explodeField = explodeField;
+  }
+
+  @JsonProperty
+  public String getPreFilterSQL() {
+    return preFilterSQL;
+  }
+
+  public void setPreFilterSQL(String preFilterSQL) {
+    this.preFilterSQL = preFilterSQL;
   }
 }

@@ -128,7 +128,7 @@ public class FieldInfo {
   }
 
   @JsonProperty
-  public boolean isEnum() {
+  public boolean getIsEnum() {
     return isEnum;
   }
 
