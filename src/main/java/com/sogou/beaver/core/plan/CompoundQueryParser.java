@@ -6,10 +6,7 @@ import com.sogou.beaver.model.TableInfo;
 import com.sogou.beaver.common.CommonUtils;
 
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,40 +15,43 @@ import java.util.stream.Stream;
  */
 public class CompoundQueryParser {
   public static ExecutionPlan parseExecutionPlan(CompoundQuery query) throws ParseException {
-    String engine = parseEngine(query);
-    String sql = parseSQL(engine, query);
-    return new ExecutionPlan(engine, sql, new HashMap<>());
-  }
-
-  private static String parseEngine(CompoundQuery query) {
-    String engine = Config.SQL_ENGINE_SPARK_SQL;
-
     try {
       TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(query.getTableName());
-      if (tableInfo != null) {
-        long timeIntervalMinutes = getTimeIntervalMinutes(tableInfo.getFrequency(),
-            query.getTimeRange().getStartTime(), query.getTimeRange().getEndTime());
-        /*
-         * Presto Engine Condition:
-         * 1. FileFormat: RC/ORC
-         * 2. Database: custom
-         * 3. Time Range: with a day
-         */
-        if ((tableInfo.getFileFormat().equalsIgnoreCase(Config.FILE_FORMAT_ORC)
-            || tableInfo.getFileFormat().equalsIgnoreCase(Config.FILE_FORMAT_RCFILE))
-            && tableInfo.getDatabase().equalsIgnoreCase(Config.HIVE_DATABASE_CUSTOM)
-            && timeIntervalMinutes != -1 && timeIntervalMinutes <= 1440) {
-          engine = Config.SQL_ENGINE_PRESTO;
-        }
+      if (tableInfo == null) {
+        throw new ParseException("No such table: " + query.getTableName());
       }
+
+      String engine = parseEngine(tableInfo, query);
+      String sql = parseSQL(tableInfo, engine, query);
+      return new ExecutionPlan(engine, sql, new HashMap<>());
     } catch (ConnectionPoolException | SQLException e) {
-      // ignore
+      throw new ParseException(e);
+    }
+  }
+
+  private static String parseEngine(TableInfo tableInfo, CompoundQuery query) {
+    String engine = Config.SQL_ENGINE_SPARK_SQL;
+
+    long timeIntervalMinutes = getTimeIntervalMinutes(tableInfo.getFrequency(),
+        query.getTimeRange().getStartTime(), query.getTimeRange().getEndTime());
+    /*
+     * Presto Engine Condition:
+     * 1. FileFormat: RC/ORC
+     * 2. Database: custom
+     * 3. Time Range: with a day
+     */
+    if ((tableInfo.getFileFormat().equalsIgnoreCase(Config.FILE_FORMAT_ORC)
+        || tableInfo.getFileFormat().equalsIgnoreCase(Config.FILE_FORMAT_RCFILE))
+        && tableInfo.getDatabase().equalsIgnoreCase(Config.HIVE_DATABASE_CUSTOM)
+        && timeIntervalMinutes != -1 && timeIntervalMinutes <= 1440) {
+      engine = Config.SQL_ENGINE_PRESTO;
     }
 
     return engine;
   }
 
-  private static String parseSQL(String engine, CompoundQuery query) throws ParseException {
+  private static String parseSQL(TableInfo tableInfo, String engine, CompoundQuery query)
+      throws ParseException {
     String lateralViewSQL = parseLateralViewSQL(
         engine, query.getMetrics(), query.getBuckets(), query.getFilters());
 
@@ -71,7 +71,7 @@ public class CompoundQueryParser {
     String timeRangeSQL = parseTimeRangeSQL(
         query.getTimeRange().getStartTime(), query.getTimeRange().getEndTime());
 
-    String whereSQL = parseWhereSQL(engine, query.getFilters());
+    String whereSQL = parseWhereSQL(tableInfo.getPreFilterSQL(), engine, query.getFilters());
     whereSQL = !whereSQL.equals("") ? "AND " + whereSQL : "";
 
     String bucketSQL = parseBucketSQL(engine, query.getBuckets());
@@ -139,12 +139,23 @@ public class CompoundQueryParser {
         CommonUtils.formatSQLValue(startTime, true), CommonUtils.formatSQLValue(endTime, true));
   }
 
-  private static String parseWhereSQL(String engine, List<CompoundQuery.Filter> filters) {
-    return filters.stream()
+  private static String parseWhereSQL(String prefilterSQL, String engine,
+                                      List<CompoundQuery.Filter> filters) {
+    String whereSQL = filters.stream()
         .filter(filter -> filter.getFilterType().equalsIgnoreCase(Config.FILTER_TYPE_WHERE))
         .map(filter -> getFilter(filter.getMethod(),
             getField(engine, filter.getField()), filter.getValue(), filter.getDataType()))
         .collect(Collectors.joining(" AND "));
+
+    if (prefilterSQL == null) {
+      return whereSQL;
+    } else {
+      if (whereSQL.equals("")) {
+        return prefilterSQL;
+      } else {
+        return prefilterSQL + " AND " + whereSQL;
+      }
+    }
   }
 
   private static String parseBucketSQL(String engine, List<CompoundQuery.Bucket> buckets) {
