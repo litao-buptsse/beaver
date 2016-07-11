@@ -292,7 +292,7 @@ public class CompoundQueryParser {
 
     if (method.equalsIgnoreCase("LIKE")) {
       filter = String.format("(%s)", Stream.of(value.split(","))
-          .map(v -> String.format("%s LIKE '%%s%'", field, v.trim()))
+          .map(v -> field + " LIKE '%" + v.trim() + "%'")
           .collect(Collectors.joining(" OR ")));
     }
 
