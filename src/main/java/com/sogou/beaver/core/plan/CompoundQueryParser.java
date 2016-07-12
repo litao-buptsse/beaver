@@ -52,8 +52,9 @@ public class CompoundQueryParser {
 
   private static String parseSQL(TableInfo tableInfo, String engine, CompoundQuery query)
       throws ParseException {
-    String lateralViewSQL = parseLateralViewSQL(
-        engine, query.getMetrics(), query.getBuckets(), query.getFilters());
+    String tableName = tableInfo.getDatabase() + "." + tableInfo.getTableName();
+
+    String lateralViewSQL = parseLateralViewSQL(tableInfo.getExplodeField(), engine);
 
     String bucketMetricSQL = parseBucketMetricSQL(engine, query.getBuckets());
 
@@ -90,34 +91,24 @@ public class CompoundQueryParser {
     String limitSQL = parseLimitSQL();
 
     return String.format("SELECT %s %s FROM %s %s WHERE %s %s %s %s %s %s",
-        bucketMetricSQL, metricSQL, query.getTableName(), lateralViewSQL, timeRangeSQL, whereSQL,
+        bucketMetricSQL, metricSQL, tableName, lateralViewSQL, timeRangeSQL, whereSQL,
         bucketSQL, havingSQL, orderBySQL, limitSQL);
   }
 
-  private static String parseLateralViewSQL(String engine,
-                                            List<CompoundQuery.Metric> metrics,
-                                            List<CompoundQuery.Bucket> buckets,
-                                            List<CompoundQuery.Filter> filters) {
-    List<String> arrayFields = getArrayFields(metrics, buckets, filters);
+  private static String parseLateralViewSQL(String explodeField, String engine) {
 
-    String lateralViewSQL = "";
-    if (arrayFields.size() > 0) {
+    String sql = "";
+    if (explodeField != null) {
       switch (engine) {
         case Config.SQL_ENGINE_PRESTO:
-          lateralViewSQL = String.format("CROSS JOIN UNNEST(%s) AS t (%s)",
-              arrayFields.stream().collect(Collectors.joining(", ")),
-              arrayFields.stream().map(f -> "f_" + f).collect(Collectors.joining(", "))
-          );
+          sql = String.format("CROSS JOIN UNNEST(%s) AS t (f_%s)", explodeField, explodeField);
           break;
         case Config.SQL_ENGINE_SPARK_SQL:
-          lateralViewSQL = arrayFields.stream().map(f ->
-              String.format("LATERAL VIEW explode(%s) %s AS %s", f, "t_" + f, "f_" + f)
-          ).collect(Collectors.joining(" "));
+          sql = String.format("LATERAL VIEW explode(%s) t AS f_%s", explodeField, explodeField);
           break;
       }
     }
-
-    return lateralViewSQL;
+    return sql;
   }
 
   private static String parseBucketMetricSQL(String engine, List<CompoundQuery.Bucket> buckets) {
@@ -212,19 +203,6 @@ public class CompoundQueryParser {
     long startTimestamp = CommonUtils.convertStringToTimestamp(startTime, timeFormat);
     long endTimestamp = CommonUtils.convertStringToTimestamp(endTime, timeFormat);
     return (endTimestamp - startTimestamp) / 1000 / 60 + 60;
-  }
-
-  private static List<String> getArrayFields(List<CompoundQuery.Metric> metrics,
-                                             List<CompoundQuery.Bucket> buckets,
-                                             List<CompoundQuery.Filter> filters) {
-    return Stream.concat(Stream.concat(
-        metrics.stream().map(m -> getArrayField(m.getField()))
-            .filter(f -> f != null && f.length == 2 && !f[1].equalsIgnoreCase("size")).map(f -> f[0]),
-        buckets.stream().map(b -> getArrayField(b.getField()))
-            .filter(f -> f != null && f.length == 2 && !f[1].equalsIgnoreCase("size")).map(f -> f[0])),
-        filters.stream().map(f -> getArrayField(f.getField()))
-            .filter(f -> f != null && f.length == 2 && !f[1].equalsIgnoreCase("size")).map(f -> f[0])
-    ).distinct().collect(Collectors.toList());
   }
 
   private static String getMetric(String engine, String method, String field) {
