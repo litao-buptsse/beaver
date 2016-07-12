@@ -118,10 +118,17 @@ public class CompoundQueryParser {
   }
 
   private static String parseMetricSQL(String engine, List<CompoundQuery.Metric> metrics) {
-    return metrics.stream()
+    String sql1 = metrics.stream()
+        .filter(metric -> !metric.getMethod().startsWith("m_"))
         .map(metric -> String.format("%s AS %s", getMetric(
             engine, metric.getMethod(), getField(engine, metric.getField())), metric.getAlias()))
         .collect(Collectors.joining(", "));
+    String sql2 = metrics.stream()
+        .filter(metric -> metric.getMethod().startsWith("m_"))
+        .map(metric -> String.format("%s AS %s", metric.getField(), metric.getAlias()))
+        .collect(Collectors.joining(", "));
+    return sql1.equals("") ? sql2 :
+        (sql2.equals("") ? sql1 : String.format("%s, %s", sql1, sql2));
   }
 
   private static String parseTimeRangeSQL(String startTime, String endTime) {

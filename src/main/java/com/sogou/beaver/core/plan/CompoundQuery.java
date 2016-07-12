@@ -28,7 +28,8 @@ public class CompoundQuery implements Query {
 
     public String getAlias() {
       return alias != null && !alias.equals("") ? alias :
-          String.format("%s_%s", method, field.replace(".", "_"));
+          (method.startsWith("m_") ? method :
+              String.format("%s_%s", method, field.replace(".", "_")));
     }
 
     public void setAlias(String alias) {
