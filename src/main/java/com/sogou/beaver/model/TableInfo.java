@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class TableInfo {
   private long id;
+  private long tableId;
   private String name;
   private String database;
   private String tableName;
@@ -16,9 +17,10 @@ public class TableInfo {
   private String explodeField;
   private String preFilterSQL;
 
-  public TableInfo(long id, String database, String tableName, String description,
+  public TableInfo(long id, long tableId, String database, String tableName, String description,
                    String frequency, String fileFormat, String explodeField, String preFilterSQL) {
     this.id = id;
+    this.tableId = tableId;
     this.database = database;
     this.tableName = tableName;
     this.name = database + "." + tableName +
@@ -37,6 +39,15 @@ public class TableInfo {
 
   public void setId(long id) {
     this.id = id;
+  }
+
+  @JsonProperty
+  public long getTableId() {
+    return tableId;
+  }
+
+  public void setTableId(long tableId) {
+    this.tableId = tableId;
   }
 
   @JsonProperty

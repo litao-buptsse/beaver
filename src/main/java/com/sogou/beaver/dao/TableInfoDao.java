@@ -15,11 +15,14 @@ import java.util.List;
  * Created by Tao Li on 6/11/16.
  */
 public class TableInfoDao {
-  private final static String TABLE_NAME = "dw_tables";
+  private final static String TABLE_TABLE_NAME = "dw_tables";
+  private final static String VIEW_TABLE_NAME = "dw_views";
 
-  private List<TableInfo> getTableInfos(String whereClause)
+  private List<TableInfo> getTableInfos(String filterClause)
       throws ConnectionPoolException, SQLException {
-    String sql = String.format("SELECT * FROM %s %s", TABLE_NAME, whereClause);
+    String sql = String.format(
+        "SELECT * FROM %s v JOIN %s t ON v.tableId=t.id AND v.online=1 AND t.online=1 %s",
+        VIEW_TABLE_NAME, TABLE_TABLE_NAME, filterClause);
     Connection conn = Config.POOL.getConnection();
     try {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -27,14 +30,15 @@ public class TableInfoDao {
           List<TableInfo> tableInfos = new ArrayList<>();
           while (rs.next()) {
             tableInfos.add(new TableInfo(
-                rs.getLong("id"),
-                rs.getString("database"),
-                rs.getString("tableName"),
-                rs.getString("description"),
-                rs.getString("frequency"),
-                rs.getString("fileFormat"),
-                rs.getString("explodeField"),
-                rs.getString("preFilterSQL")
+                rs.getLong("v.id"),
+                rs.getLong("v.tableId"),
+                rs.getString("t.database"),
+                rs.getString("t.tableName"),
+                rs.getString("v.description"),
+                rs.getString("t.frequency"),
+                rs.getString("t.fileFormat"),
+                rs.getString("v.explodeField"),
+                rs.getString("v.preFilterSQL")
             ));
           }
           return tableInfos;
@@ -51,7 +55,7 @@ public class TableInfoDao {
   }
 
   public List<TableInfo> getAllTableInfos() throws ConnectionPoolException, SQLException {
-    return getTableInfos("WHERE online=1");
+    return getTableInfos("");
   }
 
   public TableInfo getTableInfoByName(String name) throws ConnectionPoolException, SQLException {
@@ -64,15 +68,19 @@ public class TableInfoDao {
     String[] arr2 = arr[1].split(":");
     String tableName = arr2[0];
 
-    String sql = String.format("WHERE online=1 AND `database`='%s' AND tableName='%s'",
+    String sql = String.format("AND t.`database`='%s' AND t.tableName='%s'",
         database, tableName);
 
     if (arr2.length == 1) {
-      sql = sql + " AND (explodeField is null OR explodeField='')";
+      sql = sql + " AND (v.explodeField is null OR v.explodeField='')";
     } else {
-      sql = sql + " AND explodeField='" + arr2[1] + "'";
+      sql = sql + " AND v.explodeField='" + arr2[1] + "'";
     }
 
     return getTableInfo(sql);
+  }
+
+  public TableInfo getTableInfoById(long id) throws ConnectionPoolException, SQLException {
+    return getTableInfo(String.format("AND v.id='%s'", id));
   }
 }

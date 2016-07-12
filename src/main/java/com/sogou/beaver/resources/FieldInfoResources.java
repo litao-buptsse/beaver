@@ -18,10 +18,10 @@ import java.sql.SQLException;
 public class FieldInfoResources {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Object getFieldInfos(@QueryParam("tableId") long tableId,
+  public Object getFieldInfos(@QueryParam("tableId") long viewId,
                               @QueryParam("callback") String callback)
       throws ConnectionPoolException, SQLException {
     return CommonUtils.formatJSONPObject(callback,
-        Config.FIELD_INFO_DAO.getFieldInfosByTableId(tableId));
+        Config.FIELD_INFO_DAO.getFieldInfosByViewId(viewId));
   }
 }

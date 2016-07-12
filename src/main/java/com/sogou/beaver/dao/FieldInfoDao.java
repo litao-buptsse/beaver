@@ -3,6 +3,7 @@ package com.sogou.beaver.dao;
 import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.FieldInfo;
+import com.sogou.beaver.model.TableInfo;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,15 +18,21 @@ import java.util.List;
 public class FieldInfoDao {
   private final static String TABLE_NAME = "dw_fields";
 
-  public List<FieldInfo> getFieldInfosByTableId(long tableId)
+  public List<FieldInfo> getFieldInfosByViewId(long viewId)
       throws ConnectionPoolException, SQLException {
+    List<FieldInfo> fieldInfos = new ArrayList<>();
+
+    TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoById(viewId);
+    if (tableInfo == null) {
+      return fieldInfos;
+    }
+
     String sql = String.format("SELECT * FROM %s WHERE online=1 AND tableId=%s " +
-        "ORDER BY description", TABLE_NAME, tableId);
+        "ORDER BY description", TABLE_NAME, tableInfo.getTableId());
     Connection conn = Config.POOL.getConnection();
     try {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
         try (ResultSet rs = stmt.executeQuery()) {
-          List<FieldInfo> fieldInfos = new ArrayList<>();
           while (rs.next()) {
             fieldInfos.add(new FieldInfo(
                 rs.getLong("id"),
