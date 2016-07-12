@@ -33,7 +33,8 @@ public class TableMetricDao {
                 rs.getLong("tableId"),
                 rs.getString("name"),
                 rs.getString("description"),
-                rs.getString("expression")
+                rs.getString("expression"),
+                rs.getString("prestoExpression")
             ));
           }
           return tableMetrics;

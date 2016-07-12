@@ -4,9 +4,11 @@ import com.sogou.beaver.Config;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.TableInfo;
 import com.sogou.beaver.common.CommonUtils;
+import com.sogou.beaver.model.TableMetric;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,8 +23,12 @@ public class CompoundQueryParser {
         throw new ParseException("No such table: " + query.getTableName());
       }
 
+      Map<String, TableMetric> tableMetrics = Config.TABLE_METRIC_DAO
+          .getTableMetricsByViewId(tableInfo.getId())
+          .stream().collect(Collectors.toMap(TableMetric::getName, Function.identity()));
+
       String engine = parseEngine(tableInfo, query);
-      String sql = parseSQL(tableInfo, engine, query);
+      String sql = parseSQL(tableInfo, tableMetrics, engine, query);
       return new ExecutionPlan(engine, sql, new HashMap<>());
     } catch (ConnectionPoolException | SQLException e) {
       throw new ParseException(e);
@@ -50,7 +56,8 @@ public class CompoundQueryParser {
     return engine;
   }
 
-  private static String parseSQL(TableInfo tableInfo, String engine, CompoundQuery query)
+  private static String parseSQL(TableInfo tableInfo, Map<String, TableMetric> tableMetrics,
+                                 String engine, CompoundQuery query)
       throws ParseException {
     String tableName = tableInfo.getDatabase() + "." + tableInfo.getTableName();
 
@@ -58,7 +65,7 @@ public class CompoundQueryParser {
 
     String bucketMetricSQL = parseBucketMetricSQL(engine, query.getBuckets());
 
-    String metricSQL = parseMetricSQL(engine, query.getMetrics());
+    String metricSQL = parseMetricSQL(engine, tableMetrics, query.getMetrics());
     metricSQL = !metricSQL.equals("") && !bucketMetricSQL.equals("") ? ", " + metricSQL : metricSQL;
 
     if (bucketMetricSQL.equals("") && metricSQL.equals("")) {
@@ -117,7 +124,8 @@ public class CompoundQueryParser {
         .collect(Collectors.joining(", "));
   }
 
-  private static String parseMetricSQL(String engine, List<CompoundQuery.Metric> metrics) {
+  private static String parseMetricSQL(String engine, Map<String, TableMetric> tableMetrics,
+                                       List<CompoundQuery.Metric> metrics) {
     String sql1 = metrics.stream()
         .filter(metric -> !metric.getMethod().startsWith("m_"))
         .map(metric -> String.format("%s AS %s", getMetric(
@@ -125,7 +133,9 @@ public class CompoundQueryParser {
         .collect(Collectors.joining(", "));
     String sql2 = metrics.stream()
         .filter(metric -> metric.getMethod().startsWith("m_"))
-        .map(metric -> String.format("%s AS %s", metric.getField(), metric.getAlias()))
+        .map(metric -> String.format("%s AS %s",
+            getTableMetricExpression(engine, tableMetrics.get(metric.getMethod())),
+            metric.getAlias()))
         .collect(Collectors.joining(", "));
     return sql1.equals("") ? sql2 :
         (sql2.equals("") ? sql1 : String.format("%s, %s", sql1, sql2));
@@ -178,6 +188,21 @@ public class CompoundQueryParser {
   private static String parseLimitSQL() {
     // return "LIMIT " + Config.MAX_RESULT_RECORD_NUM;
     return "";
+  }
+
+  private static String getTableMetricExpression(String engine, TableMetric tableMetric) {
+    String expression = null;
+    if (tableMetric != null) {
+      switch (engine) {
+        case Config.SQL_ENGINE_PRESTO:
+          expression = tableMetric.getPrestoExpression();
+          break;
+        case Config.SQL_ENGINE_SPARK_SQL:
+          expression = tableMetric.getExpression();
+          break;
+      }
+    }
+    return expression;
   }
 
   private static String[] getArrayField(String field) {

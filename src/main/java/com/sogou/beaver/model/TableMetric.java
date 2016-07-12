@@ -11,13 +11,16 @@ public class TableMetric {
   private String name;
   private String description;
   private String expression;
+  private String prestoExpression;
 
-  public TableMetric(long id, long tableId, String name, String description, String expression) {
+  public TableMetric(long id, long tableId, String name, String description,
+                     String expression, String prestoExpression) {
     this.id = id;
     this.tableId = tableId;
     this.name = name;
     this.description = description;
     this.expression = expression;
+    this.prestoExpression = prestoExpression;
   }
 
   @JsonProperty
@@ -63,5 +66,14 @@ public class TableMetric {
 
   public void setExpression(String expression) {
     this.expression = expression;
+  }
+
+  @JsonProperty
+  public String getPrestoExpression() {
+    return prestoExpression;
+  }
+
+  public void setPrestoExpression(String prestoExpression) {
+    this.prestoExpression = prestoExpression;
   }
 }
