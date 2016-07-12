@@ -49,8 +49,8 @@ public class TableInfoDao {
     }
   }
 
-  private TableInfo getTableInfo(String whereClause) throws ConnectionPoolException, SQLException {
-    List<TableInfo> tableInfos = getTableInfos(whereClause);
+  private TableInfo getTableInfo(String filterClause) throws ConnectionPoolException, SQLException {
+    List<TableInfo> tableInfos = getTableInfos(filterClause);
     return tableInfos.size() == 0 ? null : tableInfos.get(0);
   }
 

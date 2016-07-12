@@ -58,9 +58,7 @@ public class FieldInfoDao {
           return fieldInfos;
         }
       }
-    } finally
-
-    {
+    } finally {
       Config.POOL.releaseConnection(conn);
     }
   }

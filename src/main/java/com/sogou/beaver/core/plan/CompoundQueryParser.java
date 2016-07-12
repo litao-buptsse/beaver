@@ -96,7 +96,6 @@ public class CompoundQueryParser {
   }
 
   private static String parseLateralViewSQL(String explodeField, String engine) {
-
     String sql = "";
     if (explodeField != null) {
       switch (engine) {

@@ -2,10 +2,10 @@ package com.sogou.beaver;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
+import com.sogou.beaver.common.CommonUtils;
 import com.sogou.beaver.dao.*;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.db.JDBCConnectionPool;
-import com.sogou.beaver.common.CommonUtils;
 import io.dropwizard.Configuration;
 
 import java.util.Collections;
@@ -86,6 +86,7 @@ public class Config extends Configuration {
   public static TableInfoDao TABLE_INFO_DAO;
   public static FieldInfoDao FIELD_INFO_DAO;
   public static EnumInfoDao ENUM_INFO_DAO;
+  public static TableMetricDao TABLE_METRIC_DAO;
   public static MethodInfoDao METHOD_INFO_DAO;
   public static EngineInfoDao ENGINE_INFO_DAO;
   public static JDBCConnectionPool PRESTO_POOL;
@@ -112,6 +113,7 @@ public class Config extends Configuration {
     TABLE_INFO_DAO = new TableInfoDao();
     FIELD_INFO_DAO = new FieldInfoDao();
     ENUM_INFO_DAO = new EnumInfoDao();
+    TABLE_METRIC_DAO = new TableMetricDao();
     METHOD_INFO_DAO = new MethodInfoDao();
     ENGINE_INFO_DAO = new EngineInfoDao();
 

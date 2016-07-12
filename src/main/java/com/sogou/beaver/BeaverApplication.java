@@ -31,6 +31,7 @@ public class BeaverApplication extends Application<Config> {
     environment.jersey().register(new TableInfoResources());
     environment.jersey().register(new FieldInfoResources());
     environment.jersey().register(new EnumInfoResources());
+    environment.jersey().register(new TableMetricResources());
     environment.jersey().register(new MethodInfoResources());
     environment.jersey().register(new EngineInfoResources());
 
