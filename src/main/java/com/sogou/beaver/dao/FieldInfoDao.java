@@ -27,6 +27,8 @@ public class FieldInfoDao {
       return fieldInfos;
     }
 
+    String explodeField = tableInfo.getExplodeField();
+
     String sql = String.format("SELECT * FROM %s WHERE online=1 AND tableId=%s " +
         "ORDER BY description", TABLE_NAME, tableInfo.getTableId());
     Connection conn = Config.POOL.getConnection();
@@ -34,6 +36,14 @@ public class FieldInfoDao {
       try (PreparedStatement stmt = conn.prepareStatement(sql)) {
         try (ResultSet rs = stmt.executeQuery()) {
           while (rs.next()) {
+            String name = rs.getString("name");
+            boolean isArrayField = name.contains(".");
+            String arrayField = name.split("\\.")[0];
+
+            if (isArrayField && (explodeField == null || !explodeField.equals(arrayField))) {
+              continue;
+            }
+
             fieldInfos.add(new FieldInfo(
                 rs.getLong("id"),
                 rs.getLong("tableId"),
@@ -48,7 +58,9 @@ public class FieldInfoDao {
           return fieldInfos;
         }
       }
-    } finally {
+    } finally
+
+    {
       Config.POOL.releaseConnection(conn);
     }
   }
