@@ -1,9 +1,6 @@
 package com.sogou.beaver.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
 
 /**
  * Created by Tao Li on 6/11/16.
@@ -128,7 +125,7 @@ public class FieldInfo {
   }
 
   @JsonProperty
-  public boolean getIsEnum() {
+  public boolean isEnum() {
     return isEnum;
   }
 
