@@ -1,13 +1,16 @@
 package com.sogou.beaver.core.plan;
 
 import com.sogou.beaver.Config;
+import com.sogou.beaver.common.CommonUtils;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.TableInfo;
-import com.sogou.beaver.common.CommonUtils;
 import com.sogou.beaver.model.TableMetric;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,6 +19,9 @@ import java.util.stream.Stream;
  * Created by Tao Li on 6/19/16.
  */
 public class CompoundQueryParser {
+  private final static String TABLE_METRIC_PREFIX = "m_";
+  private final static String LATERAL_VIEW_FIELD_PREFIX = "f_";
+
   public static ExecutionPlan parseExecutionPlan(CompoundQuery query) throws ParseException {
     try {
       TableInfo tableInfo = Config.TABLE_INFO_DAO.getTableInfoByName(query.getTableName());
@@ -63,7 +69,7 @@ public class CompoundQueryParser {
 
     String lateralViewSQL = parseLateralViewSQL(tableInfo.getExplodeField(), engine);
 
-    String bucketMetricSQL = parseBucketMetricSQL(engine, query.getBuckets());
+    String bucketMetricSQL = parseBucketMetricSQL(query.getBuckets());
 
     String metricSQL = parseMetricSQL(engine, tableMetrics, query.getMetrics());
     metricSQL = !metricSQL.equals("") && !bucketMetricSQL.equals("") ? ", " + metricSQL : metricSQL;
@@ -79,13 +85,13 @@ public class CompoundQueryParser {
     String timeRangeSQL = parseTimeRangeSQL(
         query.getTimeRange().getStartTime(), query.getTimeRange().getEndTime());
 
-    String whereSQL = parseWhereSQL(tableInfo.getPreFilterSQL(), engine, query.getFilters());
+    String whereSQL = parseWhereSQL(tableInfo.getPreFilterSQL(), query.getFilters());
     whereSQL = !whereSQL.equals("") ? "AND " + whereSQL : "";
 
     String bucketSQL = parseBucketSQL(engine, query.getBuckets());
     bucketSQL = !bucketSQL.equals("") ? "GROUP BY " + bucketSQL : "";
 
-    String havingSQL = parseHavingSQL(engine, query.getFilters());
+    String havingSQL = parseHavingSQL(engine, tableMetrics, query.getFilters());
     havingSQL = !havingSQL.equals("") ? "HAVING " + havingSQL : "";
 
     if (bucketSQL.equals("") && (!bucketMetricSQL.equals("") || !havingSQL.equals(""))) {
@@ -107,38 +113,33 @@ public class CompoundQueryParser {
     if (explodeField != null) {
       switch (engine) {
         case Config.SQL_ENGINE_PRESTO:
-          sql = String.format("CROSS JOIN UNNEST(%s) AS t (f_%s)", explodeField, explodeField);
+          sql = String.format("CROSS JOIN UNNEST(%s) AS t (%s)",
+              explodeField, LATERAL_VIEW_FIELD_PREFIX + explodeField);
           break;
         case Config.SQL_ENGINE_SPARK_SQL:
-          sql = String.format("LATERAL VIEW explode(%s) t AS f_%s", explodeField, explodeField);
+          sql = String.format("LATERAL VIEW explode(%s) t AS %s",
+              explodeField, LATERAL_VIEW_FIELD_PREFIX + explodeField);
           break;
       }
     }
     return sql;
   }
 
-  private static String parseBucketMetricSQL(String engine, List<CompoundQuery.Bucket> buckets) {
+  private static String parseBucketMetricSQL(List<CompoundQuery.Bucket> buckets) {
     return buckets.stream()
         .map(bucket -> String.format("%s AS %s",
-            getField(engine, bucket.getField()), bucket.getAlias()))
+            getField(bucket.getField()), bucket.getAlias()))
         .collect(Collectors.joining(", "));
   }
 
   private static String parseMetricSQL(String engine, Map<String, TableMetric> tableMetrics,
                                        List<CompoundQuery.Metric> metrics) {
-    String sql1 = metrics.stream()
-        .filter(metric -> !metric.getMethod().startsWith("m_"))
-        .map(metric -> String.format("%s AS %s", getMetric(
-            engine, metric.getMethod(), getField(engine, metric.getField())), metric.getAlias()))
-        .collect(Collectors.joining(", "));
-    String sql2 = metrics.stream()
-        .filter(metric -> metric.getMethod().startsWith("m_"))
+    return metrics.stream()
         .map(metric -> String.format("%s AS %s",
-            getTableMetricExpression(engine, tableMetrics.get(metric.getMethod())),
+            getMetric(engine, metric.getMethod(), getField(metric.getField()),
+                tableMetrics.get(metric.getMethod())),
             metric.getAlias()))
         .collect(Collectors.joining(", "));
-    return sql1.equals("") ? sql2 :
-        (sql2.equals("") ? sql1 : String.format("%s, %s", sql1, sql2));
   }
 
   private static String parseTimeRangeSQL(String startTime, String endTime) {
@@ -146,12 +147,11 @@ public class CompoundQueryParser {
         CommonUtils.formatSQLValue(startTime, true), CommonUtils.formatSQLValue(endTime, true));
   }
 
-  private static String parseWhereSQL(String prefilterSQL, String engine,
-                                      List<CompoundQuery.Filter> filters) {
+  private static String parseWhereSQL(String prefilterSQL, List<CompoundQuery.Filter> filters) {
     String whereSQL = filters.stream()
         .filter(filter -> filter.getFilterType().equalsIgnoreCase(Config.FILTER_TYPE_WHERE))
         .map(filter -> getFilter(filter.getMethod(),
-            getField(engine, filter.getField()), filter.getValue(), filter.getDataType()))
+            getField(filter.getField()), filter.getValue(), filter.getDataType()))
         .collect(Collectors.joining(" AND "));
 
     if (prefilterSQL == null) {
@@ -166,17 +166,20 @@ public class CompoundQueryParser {
   }
 
   private static String parseBucketSQL(String engine, List<CompoundQuery.Bucket> buckets) {
-    return buckets.stream().map(bucket -> getField(engine, bucket.getField()))
+    return buckets.stream().map(bucket -> getField(bucket.getField()))
         .collect(Collectors.joining(", "));
   }
 
-  private static String parseHavingSQL(String engine, List<CompoundQuery.Filter> filters) {
+  private static String parseHavingSQL(String engine, Map<String, TableMetric> tableMetrics,
+                                       List<CompoundQuery.Filter> filters) {
     return filters.stream()
         .filter(filter -> filter.getFilterType().equalsIgnoreCase(Config.FILTER_TYPE_HAVING))
-        .filter(filter -> filter.getField().indexOf(":") > 0)
-        .map(filter -> getFilter(filter.getMethod(),
-            getHavingField(engine, getField(engine, filter.getField())),
-            filter.getValue(), filter.getDataType()))
+        .map(filter -> getFilter(
+            filter.getMethod(),
+            getHavingField(
+                engine, getField(filter.getField()), tableMetrics.get(filter.getField())),
+            filter.getValue(),
+            filter.getDataType()))
         .collect(Collectors.joining(" AND "));
   }
 
@@ -188,31 +191,6 @@ public class CompoundQueryParser {
   private static String parseLimitSQL() {
     // return "LIMIT " + Config.MAX_RESULT_RECORD_NUM;
     return "";
-  }
-
-  private static String getTableMetricExpression(String engine, TableMetric tableMetric) {
-    String expression = null;
-    if (tableMetric != null) {
-      switch (engine) {
-        case Config.SQL_ENGINE_PRESTO:
-          expression = tableMetric.getPrestoExpression();
-          break;
-        case Config.SQL_ENGINE_SPARK_SQL:
-          expression = tableMetric.getExpression();
-          break;
-      }
-    }
-    return expression;
-  }
-
-  private static String[] getArrayField(String field) {
-    if (field.contains(".")) {
-      String arrayField = field.substring(0, field.indexOf("."));
-      String subField = field.substring(field.indexOf(".") + 1, field.length());
-      return new String[]{arrayField, subField};
-    } else {
-      return null;
-    }
   }
 
   private static long getTimeIntervalMinutes(String frequency, String startTime, String endTime) {
@@ -236,45 +214,46 @@ public class CompoundQueryParser {
     return (endTimestamp - startTimestamp) / 1000 / 60 + 60;
   }
 
-  private static String getMetric(String engine, String method, String field) {
-    if (engine.equalsIgnoreCase(Config.SQL_ENGINE_PRESTO)) {
-      List<String> methods = Arrays.asList("sum", "avg", "max", "min");
-      if (methods.contains(method)) {
-        field = String.format("CAST(%s AS bigint)", field);
-      }
-    }
-
-    switch (method) {
-      case "count_distinct":
-        return String.format("count(DISTINCT %s)", field);
-      default:
-        return String.format("%s(%s)", method, field);
-    }
-  }
-
-  private static String getField(String engine, String field) {
-    String[] arrayField = getArrayField(field);
-    String realField = field;
-    if (arrayField != null) {
-      if (arrayField.length == 2 && arrayField[1].equalsIgnoreCase("size")) {
-        switch (engine) {
-          case Config.SQL_ENGINE_PRESTO:
-            realField = String.format("cardinality(%s)", arrayField[0]);
-            break;
-          case Config.SQL_ENGINE_SPARK_SQL:
-            realField = String.format("size(%s)", arrayField[0]);
-            break;
-        }
+  private static String getMetric(String engine, String method, String field,
+                                  TableMetric tableMetric) {
+    if (method.startsWith(TABLE_METRIC_PREFIX)) {
+      if (engine.equalsIgnoreCase(Config.SQL_ENGINE_PRESTO)) {
+        return tableMetric.getPrestoExpression();
       } else {
-        return "f_" + field;
+        return tableMetric.getExpression();
+      }
+    } else {
+      if (engine.equalsIgnoreCase(Config.SQL_ENGINE_PRESTO)) {
+        List<String> methods = Arrays.asList("sum", "avg", "max", "min");
+        if (methods.contains(method)) {
+          field = String.format("CAST(%s AS bigint)", field);
+        }
+      }
+      switch (method) {
+        case "count_distinct":
+          return String.format("count(DISTINCT %s)", field);
+        default:
+          return String.format("%s(%s)", method, field);
       }
     }
-    return realField;
   }
 
-  private static String getHavingField(String engine, String field) {
-    int i = field.indexOf(":");
-    return getMetric(engine, field.substring(0, i), field.substring(i + 1, field.length()));
+  private static String getField(String field) {
+    if (field.contains(".")) {
+      return LATERAL_VIEW_FIELD_PREFIX + field;
+    }
+    return field;
+  }
+
+  private static String getHavingField(String engine, String field, TableMetric tableMetric) {
+    String method = field;
+    String realField = null;
+    if (!field.startsWith(TABLE_METRIC_PREFIX)) {
+      int i = field.indexOf(":");
+      method = field.substring(0, i);
+      realField = field.substring(i + 1, field.length());
+    }
+    return getMetric(engine, method, realField, tableMetric);
   }
 
   private static String getFilter(String method, String field, String value, String dataType) {

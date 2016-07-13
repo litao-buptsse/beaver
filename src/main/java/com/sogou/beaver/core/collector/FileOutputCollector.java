@@ -1,12 +1,11 @@
 package com.sogou.beaver.core.collector;
 
 import com.sogou.beaver.Config;
+import com.sogou.beaver.common.CommonUtils;
 import com.sogou.beaver.core.meta.ColumnMeta;
 import com.sogou.beaver.core.plan.CompoundQuery;
-import com.sogou.beaver.core.plan.RawQuery;
 import com.sogou.beaver.db.ConnectionPoolException;
 import com.sogou.beaver.model.*;
-import com.sogou.beaver.common.CommonUtils;
 
 import javax.ws.rs.core.StreamingOutput;
 import java.io.BufferedReader;
