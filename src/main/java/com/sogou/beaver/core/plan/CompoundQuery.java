@@ -7,6 +7,7 @@ import java.util.List;
  */
 public class CompoundQuery implements Query {
   private String tableName;
+  private String frequency;
   private List<Metric> metrics;
   private List<Bucket> buckets;
   private List<Filter> filters;
@@ -173,10 +174,11 @@ public class CompoundQuery implements Query {
   public CompoundQuery() {
   }
 
-  public CompoundQuery(String tableName,
+  public CompoundQuery(String tableName, String frequency,
                        List<Metric> metrics, List<Bucket> buckets, List<Filter> filters,
                        TimeRange timeRange) {
     this.tableName = tableName;
+    this.frequency = frequency;
     this.metrics = metrics;
     this.buckets = buckets;
     this.filters = filters;
@@ -189,6 +191,14 @@ public class CompoundQuery implements Query {
 
   public void setTableName(String tableName) {
     this.tableName = tableName;
+  }
+
+  public String getFrequency() {
+    return frequency;
+  }
+
+  public void setFrequency(String frequency) {
+    this.frequency = frequency;
   }
 
   public List<Metric> getMetrics() {

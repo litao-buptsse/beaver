@@ -44,7 +44,7 @@ public class CompoundQueryParser {
   private static String parseEngine(TableInfo tableInfo, CompoundQuery query) {
     String engine = Config.SQL_ENGINE_SPARK_SQL;
 
-    long timeIntervalMinutes = getTimeIntervalMinutes(tableInfo.getFrequency(),
+    long timeIntervalMinutes = getTimeIntervalMinutes(query.getFrequency(),
         query.getTimeRange().getStartTime(), query.getTimeRange().getEndTime());
     /*
      * Presto Engine Condition:
@@ -66,6 +66,14 @@ public class CompoundQueryParser {
                                  String engine, CompoundQuery query)
       throws ParseException {
     String tableName = tableInfo.getDatabase() + "." + tableInfo.getTableName();
+    switch (query.getFrequency()) {
+      case "5MIN":
+        tableName = tableName + "_5min";
+        break;
+      case "DAY":
+        tableName = tableName + "_day";
+        break;
+    }
 
     String lateralViewSQL = parseLateralViewSQL(tableInfo.getExplodeField(), engine);
 

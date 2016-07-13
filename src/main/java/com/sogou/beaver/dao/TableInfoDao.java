@@ -35,7 +35,7 @@ public class TableInfoDao {
                 rs.getString("t.database"),
                 rs.getString("t.tableName"),
                 rs.getString("v.description"),
-                rs.getString("t.frequency"),
+                rs.getString("v.frequencies").split(","),
                 rs.getString("t.fileFormat"),
                 rs.getString("v.explodeField"),
                 rs.getString("v.preFilterSQL")

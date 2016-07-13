@@ -12,13 +12,13 @@ public class TableInfo {
   private String database;
   private String tableName;
   private String description;
-  private String frequency;
+  private String[] frequencies;
   private String fileFormat;
   private String explodeField;
   private String preFilterSQL;
 
   public TableInfo(long id, long tableId, String database, String tableName, String description,
-                   String frequency, String fileFormat, String explodeField, String preFilterSQL) {
+                   String[] frequencies, String fileFormat, String explodeField, String preFilterSQL) {
     this.id = id;
     this.tableId = tableId;
     this.database = database;
@@ -26,7 +26,7 @@ public class TableInfo {
     this.name = database + "." + tableName +
         (explodeField != null && !explodeField.equals("") ? ":" + explodeField : "");
     this.description = description;
-    this.frequency = frequency;
+    this.frequencies = frequencies;
     this.fileFormat = fileFormat;
     this.explodeField = explodeField != null && explodeField.equals("") ? null : explodeField;
     this.preFilterSQL = preFilterSQL != null && preFilterSQL.equals("") ? null : preFilterSQL;
@@ -86,13 +86,12 @@ public class TableInfo {
     this.description = description;
   }
 
-  @JsonProperty
-  public String getFrequency() {
-    return frequency;
+  public String[] getFrequencies() {
+    return frequencies;
   }
 
-  public void setFrequency(String frequency) {
-    this.frequency = frequency;
+  public void setFrequencies(String[] frequencies) {
+    this.frequencies = frequencies;
   }
 
   @JsonProperty
