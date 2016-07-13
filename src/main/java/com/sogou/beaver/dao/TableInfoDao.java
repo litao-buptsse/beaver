@@ -58,6 +58,10 @@ public class TableInfoDao {
     return getTableInfos("");
   }
 
+  public TableInfo getTableInfoById(long id) throws ConnectionPoolException, SQLException {
+    return getTableInfo(String.format("AND v.id='%s'", id));
+  }
+
   public TableInfo getTableInfoByName(String name) throws ConnectionPoolException, SQLException {
     String[] arr = name.split("\\.");
     if (arr.length != 2) {
@@ -78,9 +82,5 @@ public class TableInfoDao {
     }
 
     return getTableInfo(sql);
-  }
-
-  public TableInfo getTableInfoById(long id) throws ConnectionPoolException, SQLException {
-    return getTableInfo(String.format("AND v.id='%s'", id));
   }
 }
