@@ -118,4 +118,9 @@ public class JobDao {
     return getJobs(String.format(
         "WHERE userId='%s' ORDER BY id DESC LIMIT %s, %s", userId, start, length));
   }
+
+  public List<Job> getJobs(int start, int length)
+      throws ConnectionPoolException, SQLException {
+    return getJobs(String.format("ORDER BY id DESC LIMIT %s, %s", start, length));
+  }
 }

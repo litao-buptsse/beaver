@@ -39,10 +39,11 @@ public class JobResources {
                         @QueryParam("callback") String callback)
       throws ConnectionPoolException, SQLException {
     if (userId != null && userId.equalsIgnoreCase("admin")) {
-      userId = "%";
+      return CommonUtils.formatJSONPObject(callback, Config.JOB_DAO.getJobs(start, length));
+    } else {
+      return CommonUtils.formatJSONPObject(callback,
+          Config.JOB_DAO.getJobsByUserId(userId, start, length));
     }
-    return CommonUtils.formatJSONPObject(callback,
-        Config.JOB_DAO.getJobsByUserId(userId, start, length));
   }
 
   @GET
