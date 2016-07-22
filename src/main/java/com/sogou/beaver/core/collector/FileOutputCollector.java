@@ -46,9 +46,15 @@ public class FileOutputCollector implements RelationOutputCollector {
   }
 
   private static Path getDataFile(long jobId) {
+    String fileName = jobId + DATA_FILE_POSTFIX;
     return Paths.get(CommonUtils.formatPath(FILE_SEPARATOR,
-        Config.FILE_OUTPUT_COLLECTOR_ROOT_DIR, String.valueOf(jobId),
-        String.valueOf(jobId) + DATA_FILE_POSTFIX));
+        Config.FILE_OUTPUT_COLLECTOR_ROOT_DIR, String.valueOf(jobId), fileName));
+  }
+
+  private static Path getSortDataFile(long jobId, int fieldId, boolean isDesc) {
+    String fileName = jobId + ".data.sort." + fieldId + "." + (isDesc ? "desc" : "asc");
+    return Paths.get(CommonUtils.formatPath(FILE_SEPARATOR,
+        Config.FILE_OUTPUT_COLLECTOR_ROOT_DIR, String.valueOf(jobId), fileName));
   }
 
   private static Path getSchemaFile(long jobId) {
@@ -101,30 +107,75 @@ public class FileOutputCollector implements RelationOutputCollector {
   }
 
   public static JobResult getJobResult(long jobId, int start, int length,
-                                       int orderByFieldId, boolean isDesc) throws IOException {
+                                       int fieldId, boolean isDesc) throws IOException {
     JobResult result = new JobResult();
 
     List<JobResult.HeaderInfo> headerInfos = getHeaderInfos(jobId);
     result.setHeaderInfos(headerInfos);
 
-    try (BufferedReader dataFileReader = Files.newBufferedReader(getDataFile(jobId))) {
-      List<String[]> values = new ArrayList<>();
-      String line;
-      long n = 0;
-      while ((line = dataFileReader.readLine()) != null) {
-        if (n >= start + length) {
-          break;
-        } else {
-          if (n >= start) {
-            values.add(line.split(FIELD_SEPARATOR));
-          }
-        }
-        n++;
-      }
+    Path file;
+    if (fieldId == -1) {
+      file = getDataFile(jobId);
+    } else {
+      file = getOrCreateSortDataFile(jobId, fieldId, headerInfos.get(fieldId).getType(), isDesc);
+    }
+
+    try (BufferedReader dataFileReader = Files.newBufferedReader(file)) {
+      List<String[]> values = scan(dataFileReader, start, length);
       result.setValues(values);
     }
 
     return result;
+  }
+
+  private static List<String[]> scan(BufferedReader reader, int start, int length)
+      throws IOException {
+    List<String[]> values = new ArrayList<>();
+    String line;
+    long n = 0;
+    while ((line = reader.readLine()) != null) {
+      if (n >= start + length) {
+        break;
+      } else {
+        if (n >= start) {
+          values.add(line.split(FIELD_SEPARATOR));
+        }
+      }
+      n++;
+    }
+    return values;
+  }
+
+  private static Path getOrCreateSortDataFile(long jobId, int fieldId, String type, boolean isDesc)
+      throws IOException {
+    Path file = getSortDataFile(jobId, fieldId, isDesc);
+    if (Files.exists(file)) {
+      return file;
+    }
+
+    // sort -t $'\001' -k 3 -n -r 1235.data -o xxx
+
+    boolean isNumber = false;
+    type = type.toLowerCase();
+    if (type.equals("int") || type.equals("long") || type.equals("bigint")
+        || type.equals("float") || type.equals("double")) {
+      isNumber = true;
+    }
+
+    String dataFileName = String.format("data/%s/%s.data", jobId, jobId);
+    String sortDataFileName = String.format("data/%s/%s.data.sort.%s.%s",
+        jobId, jobId, fieldId, isDesc ? "desc" : "asc");
+    
+    String command = String.format("sort -t $'\\001' -k %s %s %s %s -o %s",
+        fieldId + 1, isNumber ? "-n" : "", isDesc ? "-r" : "",
+        dataFileName, sortDataFileName);
+    try {
+      System.out.println(CommonUtils.runProcess(command, null, null));
+    } catch (IOException e) {
+      // ignore
+    }
+
+    return file;
   }
 
   public static StreamingOutput getStreamingOutput(long jobId) {
