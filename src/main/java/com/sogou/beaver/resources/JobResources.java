@@ -66,14 +66,17 @@ public class JobResources {
   public Object getResult(@PathParam("id") long id,
                           @DefaultValue("0") @QueryParam("start") int start,
                           @DefaultValue("10") @QueryParam("length") int length,
+                          @DefaultValue("-1") @QueryParam("orderBy") int orderByFieldId,
+                          @DefaultValue("true") @QueryParam("isDesc") boolean isDesc,
                           @QueryParam("callback") String callback)
       throws IOException, ConnectionPoolException, SQLException {
     Job job = Config.JOB_DAO.getJobById(id);
     return CommonUtils.formatJSONPObject(callback, job.getHost().equals(Config.HOST) ?
-        FileOutputCollector.getJobResult(id, start, length) :
-        CommonUtils.sendHttpRequest(
-            "GET", String.format("http://%s:8080/jobs/result/%s?start=%s&length=%s",
-                job.getHost(), job.getId(), start, length),
+        FileOutputCollector.getJobResult(id, start, length, orderByFieldId, isDesc) :
+        CommonUtils.sendHttpRequest("GET",
+            String.format(
+                "http://%s:8080/jobs/result/%s?start=%s&length=%s&orderBy=%s&isDesc=%s",
+                job.getHost(), job.getId(), start, length, orderByFieldId, isDesc),
             MediaType.APPLICATION_JSON).readEntity(JobResult.class));
   }
 }
